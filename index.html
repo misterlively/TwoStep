@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algebra Blitz - Two-Step Equation Speed Battle</title>
+    <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Firebase App & Realtime Database SDKs (Compat CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .font-mono-math {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .animate-shake {
+      animation: shake 0.35s ease-in-out;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .animate-pop {
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Dancing avatar animation for podium */
+    @keyframes avatarDance {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      25% {
+        transform: translateY(-16px) rotate(-8deg) scale(1.15);
+      }
+      50% {
+        transform: translateY(-4px) rotate(0deg) scale(1.05);
+      }
+      75% {
+        transform: translateY(-16px) rotate(8deg) scale(1.15);
+      }
+    }
+
+    .animate-dance {
+      animation: avatarDance 1.2s ease-in-out infinite;
+    }
+
+    .animate-dance-delay-1 {
+      animation: avatarDance 1.2s ease-in-out infinite 0.2s;
+    }
+
+    .animate-dance-delay-2 {
+      animation: avatarDance 1.2s ease-in-out infinite 0.4s;
+    }
+
+    /* Confetti float effect */
+    @keyframes confettiFloat {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      animation: confettiFloat 2.5s linear infinite;
+    }
+
+    /* Custom scrollbars */
+    
+    /* Hide HTML5 number input spinner arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP HEADER / NAV BAR -->
+  <header class="bg-slate-900/90 border-b border-slate-800 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-black text-lg">
+          2x
+        </div>
+        <div>
+          <h1 class="text-lg font-bold leading-tight flex items-center gap-2">
+            <span>Algebra Blitz</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-semibold">Two-Step Equations</span>
+          </h1>
+          <p class="text-xs text-slate-400 flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="channel-indicator-text">Offline Local Sync (BroadcastChannel)</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+        <button id="nav-player-btn" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5">
+          <span>🎮</span> Player View
+        </button>
+        <button id="nav-host-btn" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+          <span>👑</span> Host Controls
+        </button>
+        <button id="nav-split-btn" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+          <span>⚡</span> Split Test View
+        </button>
+      </div>
+
+      <!-- Audio Mute & Info Controls -->
+      <div class="flex items-center gap-2">
+        <button id="audio-toggle-btn" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-colors" title="Toggle Sound">
+          <span id="audio-icon" class="text-sm">🔊</span>
+        </button>
+        <button id="firebase-config-btn" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-semibold text-amber-300 transition-colors flex items-center gap-1.5" title="Configure Firebase">
+          <span>🔥</span> Firebase Setup
+        </button>
+        <button id="how-to-play-btn"  class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-300 hover:text-white transition-colors">
+          Rules & Offline Testing
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+    <!-- FIREBASE CONFIGURATION MODAL -->
+  <div id="firebase-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative animate-pop">
+      <button id="close-firebase-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+        &times;
+      </button>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-2xl">🔥</span>
+        <h3 class="text-xl font-bold text-white">Firebase Realtime Database Setup</h3>
+      </div>
+      <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+        Paste your Firebase Web App configuration below to connect host and player devices live online from any Chromebook, phone, or computer.
+      </p>
+
+      <div class="space-y-3 mb-5">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1">
+            Firebase Config Object or Database URL
+          </label>
+          <textarea id="firebase-config-input" rows="7" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-xs text-emerald-300 focus:outline-none focus:border-indigo-500" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "my-game.firebaseapp.com",
+  "databaseURL": "https://my-game-default-rtdb.firebaseio.com",
+  "projectId": "my-game",
+  "storageBucket": "my-game.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+        </div>
+
+        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+          <p class="text-slate-200 font-semibold">Quick 3-Minute Setup in Firebase Console:</p>
+          <p>1. Go to <a href="https://console.firebase.google.com" target="_blank" class="text-indigo-400 underline">console.firebase.google.com</a> and create a project.</p>
+          <p>2. Click <strong>Build &rarr; Realtime Database &rarr; Create Database</strong> (Start in <em>Test Mode</em>).</p>
+          <p>3. Click Project Settings (⚙️) &rarr; Add Web App (<code>&lt;/&gt;</code>) and paste the config snippet above!</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <button id="clear-firebase-btn" class="px-3 py-2 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-xs rounded-xl font-medium">
+          Reset to Offline Mode
+        </button>
+        <div class="flex gap-2">
+          <button id="dismiss-firebase-btn" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold">
+            Cancel
+          </button>
+          <button id="save-firebase-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30">
+            Save & Connect Online
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP & RULES MODAL -->
+  <div id="rules-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative animate-pop">
+      <button id="close-rules-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl font-bold w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+        &times;
+      </button>
+      <h3 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+        <span class="text-indigo-400">📖</span> Game Rules & Testing
+      </h3>
+      <div class="space-y-3 text-sm text-slate-300 leading-relaxed">
+        <p><strong class="text-white">Goal:</strong> Solve as many two-step equations (<code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">ax + b = c</code>) as possible before time expires.</p>
+        <ul class="list-disc list-inside space-y-1.5 text-slate-400">
+          <li><strong class="text-slate-200">100 Seeded Problems:</strong> Every player receives the exact same 100 equations in the same order.</li>
+          <li><strong class="text-slate-200">Scratchpad Work Area:</strong> Use your mouse, touch, or stylus to work out intermediate steps directly below the equation.</li>
+          <li><strong class="text-slate-200">Bottom Answer Entry:</strong> Enter the variable's integer value at the bottom of the screen and press Enter.</li>
+          <li><strong class="text-slate-200">Host Control:</strong> The host sets match time and can click <span class="text-rose-400 font-semibold">"End Game Now"</span> at any second to stop the match.</li>
+          <li><strong class="text-slate-200">Podium & Review:</strong> At game end, the host screen shows a celebration podium with dancing avatars for the top 3, while players can step through their attempted equations one at a time with full algebraic work steps!</li>
+        </ul>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button id="dismiss-rules-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm">
+          Got it, let's play!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col">
+
+    <!-- ============================================================= -->
+    <!-- VIEW 1: SINGLE PLAYER VIEW (index.html mode)                  -->
+    <!-- ============================================================= -->
+    <div id="player-view-container" class="w-full flex-1 flex flex-col items-center justify-center">
+
+      <!-- STEP 1: PLAYER SETUP & PROFILE -->
+      <div id="player-setup-card" class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl animate-pop">
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            Player Profile
+          </div>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-white">Create Your Math Battler</h2>
+          <p class="text-sm text-slate-400 mt-1">Pick your username and signature avatar to compete</p>
+        </div>
+
+        <!-- Avatar Selection -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Choose Avatar & Accent</label>
+          
+          <!-- Avatar Preview -->
+          <div class="flex items-center justify-center mb-4">
+            <div id="avatar-preview-badge" class="w-24 h-24 rounded-2xl bg-indigo-600 flex items-center justify-center text-4xl shadow-xl shadow-indigo-500/20 ring-4 ring-slate-800 transition-all transform hover:scale-105">
+              🦊
+            </div>
+          </div>
+
+          <!-- Avatar Grid (24 Expanded Avatars) -->
+          <div class="grid grid-cols-6 sm:grid-cols-8 gap-2 mb-3 max-h-48 overflow-y-auto pr-1">
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-indigo-500 text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦊">🦊</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦉">🦉</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🤖">🤖</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🥷">🥷</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🚀">🚀</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐲">🐲</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🧙">🧙</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐯">🐯</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="⚡">⚡</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="👾">👾</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="👑">👑</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🔥">🔥</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐼">🐼</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦁">🦁</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦄">🦄</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐙">🐙</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦈">🦈</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦅">🦅</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐻">🐻</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🐸">🐸</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🦖">🦖</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🛸">🛸</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="🎮">🎮</button>
+            <button class="avatar-option-btn p-2 rounded-xl bg-slate-800 border-2 border-transparent text-xl hover:bg-slate-700 transition-all flex items-center justify-center" data-avatar="💎">💎</button>
+          </div>
+          <div id="avatar-unique-notice" class="text-[11px] text-center text-slate-400 mb-2">
+            ✨ Each battler gets a unique combination of avatar icon and background!
+          </div>
+
+          <!-- Color Swatches -->
+          <div class="flex items-center justify-center gap-2">
+            <button class="color-option-btn w-6 h-6 rounded-full bg-indigo-600 ring-2 ring-white" data-color="bg-indigo-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-violet-600 ring-2 ring-transparent" data-color="bg-violet-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-cyan-600 ring-2 ring-transparent" data-color="bg-cyan-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-emerald-600 ring-2 ring-transparent" data-color="bg-emerald-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-amber-600 ring-2 ring-transparent" data-color="bg-amber-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-rose-600 ring-2 ring-transparent" data-color="bg-rose-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-fuchsia-600 ring-2 ring-transparent" data-color="bg-fuchsia-600"></button>
+            <button class="color-option-btn w-6 h-6 rounded-full bg-slate-700 ring-2 ring-transparent" data-color="bg-slate-700"></button>
+          </div>
+        </div>
+
+                <!-- Room Code Input -->
+        <div class="mb-5">
+          <label for="player-room-input" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Room Code</label>
+          <div class="flex gap-2">
+            <input type="text" id="player-room-input" maxlength="10" value="BLITZ1" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 font-mono font-bold text-cyan-300 tracking-wider uppercase focus:outline-none focus:border-indigo-500 uppercase" placeholder="Enter Room (e.g. BLITZ1)">
+          </div>
+        </div>
+
+        <!-- Username Input -->
+        <div class="mb-6">
+          <label for="player-username-input" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Battler Handle</label>
+          <div class="flex gap-2">
+            <input type="text" id="player-username-input" maxlength="15" value="MathWizard" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 font-semibold text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" placeholder="Enter username...">
+            <button id="random-name-btn" class="px-3.5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 hover:text-white text-xs font-medium transition-colors" title="Generate Random Name">
+              🎲 Random
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+          <button id="join-lobby-btn" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-base shadow-lg shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>📡</span> Join Host Game Lobby
+          </button>
+          <button id="solo-practice-btn" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2">
+            <span>🎯</span> Solo Practice Run (No Host Needed)
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: PLAYER LOBBY (Waiting for Host) -->
+      <div id="player-lobby-card" class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center hidden animate-pop">
+        <div class="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-4xl mb-4 shadow-xl" id="lobby-avatar-badge">
+          🦊
+        </div>
+        <h3 id="lobby-player-name" class="text-2xl font-bold text-white mb-1">MathWizard</h3>
+        <p class="text-xs text-indigo-400 font-medium mb-6">Status: Connected to Game Channel</p>
+
+        <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-5 mb-6 text-left space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Game Room:</span>
+            <span class="text-slate-200 font-mono font-semibold" id="lobby-room-code">#LOCAL_BATTLE</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Target Problems:</span>
+            <span class="text-slate-200 font-semibold">100 Two-Step Equations</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Game Duration:</span>
+            <span class="text-slate-200 font-semibold" id="lobby-duration-text">Set by Host (e.g. 2:00)</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">Problem Order:</span>
+            <span class="text-emerald-400 font-semibold">Identical for all players</span>
+          </div>
+        </div>
+
+        <!-- Pulsing indicator -->
+        <div class="flex items-center justify-center gap-3 py-3 mb-6 bg-indigo-950/30 border border-indigo-900/40 rounded-xl">
+          <div class="w-3 h-3 rounded-full bg-indigo-400 animate-ping"></div>
+          <span class="text-sm font-medium text-indigo-200" id="lobby-status-message">Waiting for host to start the game...</span>
+        </div>
+
+        <button id="leave-lobby-btn" class="text-xs text-slate-400 hover:text-slate-200 underline">
+          &larr; Back to Profile Setup
+        </button>
+      </div>
+
+      <!-- STEP 3: COUNTDOWN OVERLAY -->
+      <div id="countdown-card" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-40 flex flex-col items-center justify-center hidden">
+        <p class="text-lg uppercase tracking-widest text-indigo-400 font-bold mb-2">Get Ready!</p>
+        <div id="countdown-number" class="text-8xl md:text-9xl font-black text-white font-mono-math animate-pop">
+          3
+        </div>
+        <p class="text-sm text-slate-400 mt-4">100 Two-step equations queued in order</p>
+      </div>
+
+      <!-- STEP 4: ACTIVE GAMEPLAY CARD (MAX REAL ESTATE, PROBLEM AT TOP, ZERO SPACE TO SCRATCHPAD, RIGHT TOOLBAR, BOTTOM ANSWER BOX & SKIP BUTTON) -->
+      <div id="player-game-card" class="w-full max-w-5xl flex-1 flex flex-col p-3 sm:p-4 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl hidden">
+        
+        <!-- Game Top Slim Stats Bar -->
+        <div class="flex items-center justify-between gap-4 mb-2 pb-2 border-b border-slate-800">
+          
+          <!-- Problem Counter -->
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+              #
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400">Problem</div>
+              <div class="text-xs font-bold text-white"><span id="current-problem-num">1</span> <span class="text-slate-500 font-normal">/ 100</span></div>
+            </div>
+          </div>
+
+          <!-- Timer Clock -->
+          <div class="flex items-center gap-2 px-3.5 py-1 rounded-2xl bg-slate-950 border border-slate-800">
+            <span class="text-slate-400 text-xs">⏱️</span>
+            <span id="player-timer-display" class="text-lg md:text-2xl font-black font-mono-math text-white tracking-wider">02:00</span>
+          </div>
+
+          <!-- Streak & Score -->
+          <div class="text-right">
+            <div class="text-[10px] text-slate-400">Score / Streak</div>
+            <div class="text-xs font-bold text-white flex items-center justify-end gap-1.5">
+              <span id="player-score-display" class="text-indigo-300">0</span>
+              <span id="player-streak-badge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">🔥 0</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Visual Progress Bar for 100 problems -->
+        <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden mb-2 border border-slate-800">
+          <div id="player-progress-bar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full w-[1%] transition-all duration-300"></div>
+        </div>
+
+        <!-- 1. PROBLEM DISPLAY DIRECTLY AT THE TOP -->
+        <div class="relative bg-gradient-to-b from-slate-950 to-slate-900 border border-slate-800 rounded-t-2xl p-3 sm:p-4 text-center border-b-0 shadow-inner mb-0">
+          <div id="feedback-toast" class="absolute top-2 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white hidden z-20"></div>
+          <div class="text-[10px] sm:text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">Solve Equation</div>
+          <div id="equation-display" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white font-mono-math tracking-wide py-1 select-none">
+            3x + 7 = 22
+          </div>
+        </div>
+
+        <!-- 2. SCRATCHPAD DIRECTLY BELOW PROBLEM (NO SPACE BETWEEN THEM) WITH OPTIONS ON RIGHT SIDE -->
+        <div class="bg-slate-950 border border-slate-800 rounded-b-2xl p-0 flex flex-row overflow-hidden relative shadow-inner mb-3 mt-0">
+          
+          <!-- Drawing Canvas on Left (stretches to fill max vertical & horizontal real estate) -->
+          <div class="relative flex-1 h-72 sm:h-96 md:h-[420px] bg-slate-900/90 cursor-crosshair overflow-hidden">
+            <canvas id="work-canvas" class="w-full h-full block" style="touch-action: none;"></canvas>
+            <div id="canvas-hint" class="absolute inset-0 flex items-center justify-center text-slate-600 pointer-events-none select-none text-xs font-mono">
+              Scratchpad: draw steps with mouse, touch, or stylus...
+            </div>
+          </div>
+
+          <!-- Scratchpad Options along the Right Side -->
+          <div class="w-14 sm:w-20 bg-slate-900/95 border-l border-slate-800 flex flex-col items-center justify-start gap-2 p-2">
+            <button id="draw-pen-btn" class="w-full py-2.5 px-1 rounded-xl bg-indigo-600 text-white font-semibold text-xs flex flex-col items-center gap-1 transition-all" title="Pen Tool">
+              <span class="text-base">✏️</span>
+              <span class="text-[10px] hidden sm:inline">Pen</span>
+            </button>
+            <button id="draw-eraser-btn" class="w-full py-2.5 px-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex flex-col items-center gap-1 transition-all" title="Eraser Tool">
+              <span class="text-base">🧽</span>
+              <span class="text-[10px] hidden sm:inline">Eraser</span>
+            </button>
+            <button id="draw-undo-btn" class="w-full py-2.5 px-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex flex-col items-center gap-1 transition-all" title="Undo Stroke">
+              <span class="text-base">↺</span>
+              <span class="text-[10px] hidden sm:inline">Undo</span>
+            </button>
+            <button id="draw-clear-btn" class="w-full py-2.5 px-1 rounded-xl bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 text-xs flex flex-col items-center gap-1 transition-all mt-auto" title="Clear Scratchpad">
+              <span class="text-base">🗑️</span>
+              <span class="text-[10px] hidden sm:inline">Clear</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- 3. ANSWER ENTRY ROW AT THE BOTTOM OF THE PAGE -->
+        <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-3.5 shadow-lg flex flex-col items-center justify-center gap-3">
+          
+          <!-- Answer Input Row (Sign change button & keypad link REMOVED) -->
+          <div class="flex items-center justify-center gap-3 w-full">
+            <span id="variable-label" class="text-2xl md:text-4xl font-extrabold text-cyan-400 font-mono-math">
+              x = 
+            </span>
+            <div class="relative flex items-center">
+              <input type="number" step="1" id="answer-input" class="w-36 md:w-52 text-center text-2xl md:text-3xl font-bold font-mono-math py-2 px-3 rounded-2xl bg-slate-950 border-2 border-indigo-500 text-white placeholder-slate-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 focus:border-cyan-400 transition-all" placeholder="?" autocomplete="off" autofocus>
+            </div>
+            <button id="submit-answer-btn" class="px-6 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-base shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+              <span>Enter ↵</span>
+            </button>
+          </div>
+
+          <!-- 4. SKIP QUESTION BUTTON BELOW THE ANSWER BOX -->
+          <div>
+            <button id="skip-btn" class="px-5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+              <span>Skip Question</span>
+              <span>&rarr;</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- STEP 5: PLAYER GAME OVER & INTERACTIVE STEP-BY-STEP REVIEW -->
+      <div id="player-results-card" class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center hidden animate-pop">
+        
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 mx-auto flex items-center justify-center text-3xl shadow-xl shadow-amber-500/20 mb-3 text-slate-950 font-black">
+          🏆
+        </div>
+
+        <h3 class="text-2xl font-extrabold text-white mb-1">Game Completed!</h3>
+        <p id="game-over-reason" class="text-xs text-slate-400 mb-5">Host ended the game</p>
+
+        <!-- Player's Personal Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div class="text-[11px] text-slate-400 mb-0.5">Equations Solved</div>
+            <div class="text-2xl font-black text-indigo-400 font-mono-math" id="results-solved-count">0</div>
+            <div class="text-[10px] text-slate-500">out of 100</div>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div class="text-[11px] text-slate-400 mb-0.5">Accuracy</div>
+            <div class="text-2xl font-black text-emerald-400 font-mono-math" id="results-accuracy">100%</div>
+            <div class="text-[10px] text-slate-500" id="results-attempts-sub">0 attempts</div>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div class="text-[11px] text-slate-400 mb-0.5">Best Streak</div>
+            <div class="text-2xl font-black text-amber-400 font-mono-math" id="results-best-streak">0</div>
+            <div class="text-[10px] text-slate-500">consecutive</div>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div class="text-[11px] text-slate-400 mb-0.5">Final Score</div>
+            <div class="text-2xl font-black text-cyan-400 font-mono-math" id="results-final-score">0</div>
+            <div class="text-[10px] text-slate-500">points</div>
+          </div>
+        </div>
+
+        <!-- STEP-BY-STEP QUESTION WORK REVIEW (ONE QUESTION AT A TIME) -->
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-5 mb-6 text-left shadow-inner">
+          
+          <!-- Review Header with Navigation -->
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>📝</span> Worked Solutions Review
+              </span>
+              <span id="review-counter-badge" class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold">
+                Question 1 of 1
+              </span>
+            </div>
+
+            <!-- Previous / Next Controls and All Questions Toggle -->
+            <div class="flex items-center gap-2">
+              <button id="toggle-review-mode-btn" class="px-2.5 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/30 text-indigo-300 text-[11px] font-medium transition-all">
+                Browse All 100
+              </button>
+              <button id="review-prev-btn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1">
+                &larr; Prev
+              </button>
+              <button id="review-next-btn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1">
+                Next &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Review Question Card -->
+          <div id="review-question-display-area" class="space-y-4">
+            <!-- Dynamically populated with chalkboard vertical steps -->
+          </div>
+
+        </div>
+
+        <!-- Return / Replay -->
+        <div class="flex gap-3">
+          <button id="results-play-again-btn" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
+            Play Again / Back to Setup
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- VIEW 2: HOST CONTROL PANEL (host.html mode)                   -->
+    <!-- ============================================================= -->
+    <div id="host-view-container" class="w-full flex-1 hidden flex-col gap-6">
+
+      <!-- Host Top Command Bar (ANSWER KEY REMOVED) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-800">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-1">
+              Host Mission Control
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-white">Math Battle Host Center</h2>
+            <p class="text-xs text-slate-400 mt-1">Configure duration, broadcast synchronized 100 equations, and stop game at any moment</p>
+          </div>
+
+          <!-- Game State Badge & Master Clock -->
+          <div class="flex items-center gap-3">
+                        <div class="px-3 py-1.5 rounded-2xl bg-slate-950 border border-slate-800 text-left">
+              <div class="text-[9px] uppercase font-bold text-slate-500">Room Code</div>
+              <input type="text" id="host-room-input" value="BLITZ1" maxlength="10" class="w-24 bg-transparent font-mono font-black text-cyan-300 text-sm uppercase focus:outline-none">
+            </div>
+            <div class="px-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-right">
+              <div class="text-[10px] uppercase font-bold text-slate-500">Host Timer</div>
+              <div id="host-timer-display" class="text-2xl font-black font-mono-math text-amber-300">02:00</div>
+            </div>
+            <div id="host-status-badge" class="px-3.5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold text-xs">
+              LOBBY OPEN
+            </div>
+          </div>
+        </div>
+
+        <!-- Host Controls & Configuration Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+          
+          <!-- Column 1: Time Settings -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Match Duration</label>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <button class="duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200" data-seconds="60">1 Min</button>
+              <button class="duration-btn py-2 px-3 rounded-xl bg-indigo-600 border border-indigo-500 text-xs font-bold text-white shadow" data-seconds="120">2 Min</button>
+              <button class="duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200" data-seconds="180">3 Min</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Custom Secs:</span>
+              <input type="number" id="host-custom-duration" min="10" max="1800" value="120" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white text-center font-mono focus:border-indigo-500">
+              <button id="host-apply-duration-btn" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium">Set</button>
+            </div>
+          </div>
+
+          <!-- Column 2: 100 Synchronized Problems Seed Info (NO ANSWER KEY) -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Synchronized Problem Set</label>
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between mb-2">
+              <div>
+                <div class="text-[10px] text-slate-500">100 Equations Seed</div>
+                <div id="host-seed-display" class="font-mono text-sm font-bold text-cyan-300">#49218</div>
+              </div>
+              <button id="host-reroll-seed-btn" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs text-slate-300 hover:text-white flex items-center gap-1">
+                <span>🎲</span> New 100
+              </button>
+            </div>
+            <div class="text-[11px] text-slate-500 italic">
+              All players receive identical equations in the exact same sequence.
+            </div>
+          </div>
+
+          <!-- Column 3: Live Game Actions -->
+          <div class="flex flex-col justify-end gap-2">
+            <button id="host-start-game-btn" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-sm">
+              <span>🚀</span> Start Game for All Players
+            </button>
+            <button id="host-end-game-btn" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-2 text-sm opacity-50 cursor-not-allowed" disabled>
+              <span>⏹️</span> End Game Now (Stop All)
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- HOST GAME FINISHED: PODIUM FOR TOP 3 WITH DANCING AVATARS & TOP 10 LIST -->
+      <div id="host-podium-card" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden hidden flex flex-col">
+        
+        <!-- Confetti sparkles decoration -->
+        <div class="absolute inset-0 pointer-events-none opacity-40">
+          <div class="confetti-piece bg-amber-400 left-[10%] top-[5%]"></div>
+          <div class="confetti-piece bg-cyan-400 left-[25%] top-[10%]"></div>
+          <div class="confetti-piece bg-rose-400 left-[45%] top-[8%]"></div>
+          <div class="confetti-piece bg-emerald-400 left-[70%] top-[12%]"></div>
+          <div class="confetti-piece bg-violet-400 left-[85%] top-[6%]"></div>
+        </div>
+
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-2">
+            Match Completed
+          </div>
+          <h3 class="text-3xl md:text-4xl font-black text-white">🏆 Champions Podium</h3>
+          <p class="text-xs text-slate-400 mt-1">Top three finishers and tournament leaderboard</p>
+        </div>
+
+        <!-- 3-TIER PODIUM DISPLAY -->
+        <div class="flex items-end justify-center gap-3 sm:gap-6 my-6 min-h-[220px]">
+          
+          <!-- 2ND PLACE (SILVER - LEFT) -->
+          <div class="flex flex-col items-center w-28 sm:w-36">
+            <div id="podium-avatar-2" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-700 flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-slate-500/20 border-2 border-slate-400 mb-2 animate-dance-delay-1">
+              🦉
+            </div>
+            <div id="podium-name-2" class="text-xs sm:text-sm font-bold text-white truncate max-w-full mb-0.5">Player 2</div>
+            <div id="podium-score-2" class="text-[11px] font-mono font-bold text-slate-300 mb-2">0 solved</div>
+            <div class="w-full h-28 sm:h-32 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-2xl border-t-4 border-slate-300 flex flex-col items-center justify-center shadow-lg">
+              <span class="text-2xl sm:text-3xl font-black text-slate-200">2</span>
+              <span class="text-[10px] uppercase font-bold text-slate-400">SILVER</span>
+            </div>
+          </div>
+
+          <!-- 1ST PLACE (GOLD - CENTER, TALLEST) -->
+          <div class="flex flex-col items-center w-32 sm:w-44 -mt-6">
+            <div class="text-xl sm:text-2xl mb-1 animate-bounce">👑</div>
+            <div id="podium-avatar-1" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-amber-500/30 border-4 border-amber-400 mb-2 animate-dance">
+              🦊
+            </div>
+            <div id="podium-name-1" class="text-sm sm:text-base font-extrabold text-amber-300 truncate max-w-full mb-0.5">Champion</div>
+            <div id="podium-score-1" class="text-xs font-mono font-bold text-amber-200 mb-2">0 solved</div>
+            <div class="w-full h-36 sm:h-44 bg-gradient-to-t from-amber-600/80 to-amber-500 rounded-t-2xl border-t-4 border-yellow-300 flex flex-col items-center justify-center shadow-2xl">
+              <span class="text-3xl sm:text-4xl font-black text-slate-950">1</span>
+              <span class="text-xs uppercase font-extrabold text-slate-900">CHAMPION</span>
+            </div>
+          </div>
+
+          <!-- 3RD PLACE (BRONZE - RIGHT) -->
+          <div class="flex flex-col items-center w-28 sm:w-36">
+            <div id="podium-avatar-3" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-800/80 flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-700/20 border-2 border-amber-600 mb-2 animate-dance-delay-2">
+              🤖
+            </div>
+            <div id="podium-name-3" class="text-xs sm:text-sm font-bold text-white truncate max-w-full mb-0.5">Player 3</div>
+            <div id="podium-score-3" class="text-[11px] font-mono font-bold text-amber-400 mb-2">0 solved</div>
+            <div class="w-full h-20 sm:h-24 bg-gradient-to-t from-amber-900 to-amber-800 rounded-t-2xl border-t-4 border-amber-600 flex flex-col items-center justify-center shadow-lg">
+              <span class="text-2xl sm:text-3xl font-black text-amber-200">3</span>
+              <span class="text-[10px] uppercase font-bold text-amber-400">BRONZE</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- REST OF THE TOP TEN (RANKS 4 - 10) -->
+        <div class="mt-6 border-t border-slate-800 pt-6">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+            <span>Ranks 4 – 10 Finishers</span>
+            <span class="text-[10px] text-slate-500">Sorted by Equations Solved</span>
+          </h4>
+          <div id="top-ten-list" class="space-y-2">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+          <button id="podium-new-game-btn" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+            <span>🔄</span> Set Up Next Match / Open Lobby
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Host Live Player Leaderboard (During Match / In Lobby) -->
+      <div id="host-live-roster-card" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-white">Live Connected Players</h3>
+            <span id="host-player-count-badge" class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold">0 players</span>
+          </div>
+          <button id="host-clear-players-btn" class="text-xs text-slate-500 hover:text-slate-300">
+            Clear Inactive
+          </button>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="flex-1 overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+                <th class="py-2.5 px-3">Rank</th>
+                <th class="py-2.5 px-3">Player</th>
+                <th class="py-2.5 px-3 text-center">Equations Solved</th>
+                <th class="py-2.5 px-3 text-center">Accuracy</th>
+                <th class="py-2.5 px-3 text-center">Current Streak</th>
+                <th class="py-2.5 px-3 text-right">Score</th>
+                <th class="py-2.5 px-3 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="host-leaderboard-tbody" class="divide-y divide-slate-800/60">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-500">
+                  No players in lobby yet. Open the Player view or open another browser tab to join!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- VIEW 3: SPLIT-SCREEN SIDE-BY-SIDE TEST VIEW                   -->
+    <!-- ============================================================= -->
+    <div id="split-view-container" class="w-full flex-1 hidden flex-col gap-4">
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between text-xs text-slate-300">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span><strong>Dual-Pane Test Station:</strong> Control from Host on the left, play on the right with full scratchpad!</span>
+        </div>
+        <span class="text-slate-500 text-[11px]">Instant Canvas Preview</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+        <!-- Embedded Host Pane -->
+        <div id="split-host-pane" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 overflow-y-auto max-h-[75vh]">
+          <!-- Host elements mirrored here -->
+        </div>
+
+        <!-- Embedded Player Pane -->
+        <div id="split-player-pane" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 overflow-y-auto max-h-[75vh] flex flex-col items-center justify-center">
+          <!-- Player elements mirrored here -->
+        </div>
+      </div>
+
+      <!-- Real-time Packet Event Log -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 font-mono text-xs max-h-24 overflow-y-auto">
+        <div class="text-[10px] uppercase font-bold text-slate-500 mb-1 flex items-center justify-between">
+          <span>📡 Offline BroadcastChannel Event Stream</span>
+          <button id="clear-events-btn" class="hover:text-slate-300">Clear</button>
+        </div>
+        <div id="event-log-container" class="space-y-1 text-slate-400">
+          <div>[INIT] BroadcastChannel 'algebra_blitz_room' ready locally.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // =========================================================================
+    // 1. DETERMINISTIC PSEUDO-RANDOM NUMBER GENERATOR (Mulberry32)
+    // =========================================================================
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // =========================================================================
+    // 2. 100 TWO-STEP EQUATION GENERATOR
+    // Format: ax + b = c, with integer answers and various variable letters
+    // =========================================================================
+    const VARIABLE_LETTERS = ['x', 'y', 'z', 'w', 'm', 'n', 'p', 'k', 't', 'r', 's', 'v', 'h'];
+
+    function generate100Equations(seed) {
+      const rand = mulberry32(seed);
+      const equations = [];
+
+      for (let i = 0; i < 100; i++) {
+        // Variable selection
+        const variable = VARIABLE_LETTERS[Math.floor(rand() * VARIABLE_LETTERS.length)];
+
+        // Integer answer: clean single-digit integers between -8 and 8
+        let answer = Math.floor(rand() * 17) - 8;
+        if (answer === 0) {
+          answer = (rand() < 0.65 ? 1 : -1) * (Math.floor(rand() * 5) + 1); // 1..5 or -1..-5
+        }
+
+        // Coefficient a: small coefficients 2, 3, 4, 5 (simpler mental math)
+        const aMag = Math.floor(rand() * 4) + 2; // 2..5
+        const aSign = rand() < 0.2 ? -1 : 1; // mostly positive
+        const a = aMag * aSign;
+
+        // Constant b: smaller offsets between 1 and 10
+        const bMag = Math.floor(rand() * 10) + 1; // 1..10
+        const bSign = rand() < 0.5 ? -1 : 1;
+        const b = bMag * bSign;
+
+        // Constant c = a * x + b
+        const c = a * answer + b;
+
+        // Formatted equation string: ax + b = c
+        const aTerm = a === 1 ? variable : (a === -1 ? `-${variable}` : `${a}${variable}`);
+        const bTerm = b > 0 ? `+ ${b}` : `- ${Math.abs(b)}`;
+        const equationStr = `${aTerm} ${bTerm} = ${c}`;
+
+        equations.push({
+          id: i + 1,
+          variable: variable,
+          a: a,
+          b: b,
+          c: c,
+          aTerm: aTerm,
+          bTerm: bTerm,
+          answer: answer,
+          display: equationStr
+        });
+      }
+
+      return equations;
+    }
+
+    // =========================================================================
+    // 3. SYNTHESIZED WEB AUDIO API SOUND SYSTEM
+    // =========================================================================
+    let audioCtx = null;
+    let isMuted = false;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) {
+          audioCtx = new AudioClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playBeep(freq, type, duration, delay = 0) {
+      if (isMuted) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        setTimeout(() => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        }, delay * 1000);
+      } catch (e) {}
+    }
+
+    function soundCorrect() {
+      playBeep(523.25, 'sine', 0.1, 0);       // C5
+      playBeep(659.25, 'triangle', 0.15, 0.08); // E5
+      playBeep(783.99, 'sine', 0.25, 0.16);  // G5
+    }
+
+    function soundIncorrect() {
+      playBeep(220, 'sawtooth', 0.15, 0);
+      playBeep(185, 'sawtooth', 0.2, 0.12);
+    }
+
+    function soundCountdown(isGo) {
+      if (isGo) {
+        playBeep(880, 'sine', 0.4, 0);
+      } else {
+        playBeep(440, 'triangle', 0.12, 0);
+      }
+    }
+
+    function soundGameOver() {
+      playBeep(587.33, 'sine', 0.15, 0);
+      playBeep(739.99, 'sine', 0.2, 0.12);
+      playBeep(880, 'sine', 0.35, 0.25);
+    }
+
+    // =========================================================================
+    // 4. OFFLINE CROSS-TAB COMMUNICATION: BroadcastChannel + localStorage
+    // =========================================================================
+    const CHANNEL_NAME = 'algebra_blitz_local_v2';
+    let broadcastChannel = null;
+
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+      }
+    } catch (e) {
+      console.warn('BroadcastChannel fallback in frame:', e);
+    }
+    // =========================================================================
+    // 4. NETWORK & MULTIPLAYER MANAGER: Firebase Realtime Database + Offline BroadcastChannel
+    // =========================================================================
+    let currentRoomCode = 'BLITZ1';
+    let firebaseDb = null;
+    let roomRef = null;
+    let playerRef = null;
+    let isFirebaseOnline = false;
+
+    // Load saved or default Firebase config
+    function getStoredFirebaseConfig() {
+      try {
+        const stored = localStorage.getItem('algebra_blitz_firebase_cfg');
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function initFirebase(cfg) {
+      if (!cfg || !cfg.apiKey || !cfg.databaseURL) {
+        updateNetworkStatusUI(false);
+        return false;
+      }
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(cfg);
+        }
+        firebaseDb = firebase.database();
+        isFirebaseOnline = true;
+        updateNetworkStatusUI(true);
+        setupFirebaseListeners(currentRoomCode);
+        return true;
+      } catch (e) {
+        console.warn('Firebase init failed, running in local mode:', e);
+        updateNetworkStatusUI(false);
+        return false;
+      }
+    }
+
+    function updateNetworkStatusUI(online) {
+      const indicator = document.getElementById('channel-indicator-text');
+      if (!indicator) return;
+      if (online) {
+        indicator.innerHTML = '<span class="text-emerald-400 font-semibold">⚡ Firebase Online (Live Across Devices)</span>';
+      } else {
+        indicator.innerHTML = '<span class="text-cyan-400">🟢 Local Offline Sync (BroadcastChannel)</span>';
+      }
+    }
+
+    // Set up real-time Firebase listeners for room config and players
+    function setupFirebaseListeners(room) {
+      if (!firebaseDb) return;
+      currentRoomCode = (room || 'BLITZ1').toUpperCase();
+      roomRef = firebaseDb.ref('rooms/' + currentRoomCode);
+
+      // 1. Listen for room configuration (Status, Seed, Duration, Start/End)
+      roomRef.child('config').on('value', snapshot => {
+        const cfg = snapshot.val();
+        if (!cfg) return;
+
+        if (cfg.seed && cfg.seed !== state.host.seed) {
+          state.host.seed = cfg.seed;
+          state.host.problems = generate100Equations(cfg.seed);
+          state.activeProblems = state.host.problems;
+          if (document.getElementById('host-seed-display')) {
+            document.getElementById('host-seed-display').textContent = '#' + cfg.seed;
+          }
+        }
+
+        if (cfg.duration) {
+          state.host.gameDuration = cfg.duration;
+        }
+
+        if (cfg.status === 'COUNTDOWN' && !state.player.isInGame && !playerLobbyCard.classList.contains('hidden')) {
+          startCountdown(() => {
+            startPlayerGame({
+              seed: cfg.seed || state.host.seed,
+              duration: cfg.duration || state.host.gameDuration
+            });
+          });
+        }
+
+        if (cfg.status === 'ENDED') {
+          state.host.gameStatus = 'ENDED';
+          try {
+            if (state.player.isInGame) {
+              endPlayerGame(cfg.endedReason || 'Host Ended Game');
+            }
+          } catch(e) {}
+          try {
+            showHostPodium();
+          } catch(e) {}
+        }
+      });
+
+      // 2. Listen for connected players
+      roomRef.child('players').on('value', snapshot => {
+        const playersData = snapshot.val() || {};
+        state.host.connectedPlayers = playersData;
+        renderHostLeaderboard();
+        updateSplitLeaderboard();
+      });
+    }
+
+    // Broadcast messages via Firebase when online, with fallback to BroadcastChannel
+    function sendNetworkMessage(msg) {
+      logNetworkEvent(msg.type, msg);
+
+      // Local BroadcastChannel & localStorage
+      if (broadcastChannel) {
+        try { broadcastChannel.postMessage(msg); } catch (e) {}
+      }
+      try {
+        localStorage.setItem(CHANNEL_NAME, JSON.stringify({ ...msg, _t: Date.now() }));
+      } catch (e) {}
+
+      // Self-loopback
+      setTimeout(() => {
+        handleIncomingMessage(msg, true);
+      }, 0);
+
+      // Firebase Online Dispatch
+      if (isFirebaseOnline && roomRef) {
+        try {
+          if (msg.type === 'PLAYER_JOIN' || msg.type === 'PLAYER_UPDATE') {
+            const p = msg.player || msg;
+            if (p && p.id) {
+              const pRef = roomRef.child('players/' + p.id);
+              pRef.update({
+                id: p.id,
+                name: p.name,
+                avatar: p.avatar,
+                color: p.color,
+                solvedCount: p.solvedCount || 0,
+                attemptsCount: p.attemptsCount || 0,
+                accuracy: p.accuracy !== undefined ? p.accuracy : 100,
+                streak: p.streak || 0,
+                score: p.score || 0,
+                status: p.status || 'Lobby',
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+              });
+              pRef.onDisconnect().remove();
+            }
+          } else if (msg.type === 'START_GAME') {
+            roomRef.child('config').update({
+              status: 'COUNTDOWN',
+              seed: msg.seed,
+              duration: msg.duration,
+              startTime: firebase.database.ServerValue.TIMESTAMP
+            });
+          } else if (msg.type === 'END_GAME') {
+            roomRef.child('config').update({
+              status: 'ENDED',
+              endedReason: msg.reason || 'Ended by Host'
+            });
+          }
+        } catch (err) {
+          console.warn('Firebase sync error:', err);
+        }
+      }
+    }
+
+
+    function logNetworkEvent(type, data) {
+      const el = document.getElementById('event-log-container');
+      if (!el) return;
+      const time = new Date().toTimeString().split(' ')[0];
+      const div = document.createElement('div');
+      div.className = 'text-[11px] truncate';
+      let summary = '';
+      if (type === 'HOST_HELLO') summary = `Host ready (Duration: ${data.duration}s)`;
+      else if (type === 'PLAYER_JOIN') summary = `Player joined: ${data.player.name}`;
+      else if (type === 'START_GAME') summary = `GAME STARTED! Seed: #${data.seed}, Duration: ${data.duration}s`;
+      else if (type === 'PLAYER_UPDATE') summary = `${data.name}: ${data.solvedCount} solved, ${data.accuracy}% acc`;
+      else if (type === 'END_GAME') summary = `HOST ENDED GAME (${data.reason})`;
+      else summary = JSON.stringify(data);
+      
+      div.innerHTML = `<span class="text-slate-500">[${time}]</span> <strong class="text-cyan-400">${type}</strong>: ${summary}`;
+      el.prepend(div);
+      while (el.children.length > 25) {
+        el.removeChild(el.lastChild);
+      }
+    }
+
+    // =========================================================================
+    // 5. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      currentView: 'player', // 'player', 'host', 'split'
+      // Player state
+      player: {
+        id: 'p_' + Math.random().toString(36).substring(2, 8),
+        name: 'MathWizard',
+        avatar: '🦊',
+        color: 'bg-indigo-600',
+        score: 0,
+        solvedCount: 0,
+        attemptsCount: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        currentProblemIndex: 0,
+        isSolo: false,
+        isInGame: false,
+        history: [] // attempted problems with worked steps
+      },
+      // Review state
+      reviewIndex: 0,
+      // Host state
+      host: {
+        gameDuration: 120, // seconds
+        seed: 49218,
+        gameStatus: 'LOBBY', // 'LOBBY', 'COUNTDOWN', 'PLAYING', 'ENDED'
+        problems: [],
+        connectedPlayers: {},
+        timerInterval: null,
+        remainingSeconds: 120
+      },
+      activeProblems: []
+    };
+
+    // Initialize initial 100 equations for host
+    state.host.problems = generate100Equations(state.host.seed);
+    state.activeProblems = state.host.problems;
+
+    // Seed mock top contenders if testing host offline
+    function ensureMockPlayersForHost() {
+      if (Object.keys(state.host.connectedPlayers).length < 3) {
+        const bots = [
+          { id: 'bot_1', name: 'SpeedySolve', avatar: '🚀', color: 'bg-cyan-600', solvedCount: 18, attemptsCount: 19, accuracy: 95, streak: 8, score: 2450, status: 'Finished' },
+          { id: 'bot_2', name: 'QuantumViper', avatar: '🐲', color: 'bg-rose-600', solvedCount: 15, attemptsCount: 16, accuracy: 94, streak: 6, score: 1980, status: 'Finished' },
+          { id: 'bot_3', name: 'NinjaCalc', avatar: '🥷', color: 'bg-emerald-600', solvedCount: 13, attemptsCount: 14, accuracy: 93, streak: 5, score: 1650, status: 'Finished' },
+          { id: 'bot_4', name: 'ZeroHero', avatar: '🤖', color: 'bg-violet-600', solvedCount: 11, attemptsCount: 12, accuracy: 92, streak: 4, score: 1320, status: 'Finished' },
+          { id: 'bot_5', name: 'VectorFox', avatar: '🦉', color: 'bg-amber-600', solvedCount: 9, attemptsCount: 10, accuracy: 90, streak: 3, score: 1040, status: 'Finished' }
+        ];
+        bots.forEach(b => {
+          if (!state.host.connectedPlayers[b.id]) {
+            state.host.connectedPlayers[b.id] = b;
+          }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 6. UI RENDERERS & NAVIGATION
+    // =========================================================================
+    const navPlayerBtn = document.getElementById('nav-player-btn');
+    const navHostBtn = document.getElementById('nav-host-btn');
+    const navSplitBtn = document.getElementById('nav-split-btn');
+
+    const playerViewContainer = document.getElementById('player-view-container');
+    const hostViewContainer = document.getElementById('host-view-container');
+    const splitViewContainer = document.getElementById('split-view-container');
+
+    function switchView(view) {
+      state.currentView = view;
+      [navPlayerBtn, navHostBtn, navSplitBtn].forEach(btn => {
+        btn.className = "px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
+      });
+
+      playerViewContainer.classList.add('hidden');
+      hostViewContainer.classList.add('hidden');
+      splitViewContainer.classList.add('hidden');
+
+      if (view === 'player') {
+        navPlayerBtn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5";
+        playerViewContainer.classList.remove('hidden');
+        resizeWorkCanvas();
+      } else if (view === 'host') {
+        navHostBtn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5";
+        hostViewContainer.classList.remove('hidden');
+        if (state.host.gameStatus === 'ENDED') {
+          showHostPodium();
+        } else {
+          renderHostLeaderboard();
+        }
+      } else if (view === 'split') {
+        navSplitBtn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm transition-all flex items-center gap-1.5";
+        splitViewContainer.classList.remove('hidden');
+        setupSplitView();
+      }
+    }
+
+    navPlayerBtn.addEventListener('click', () => switchView('player'));
+    navHostBtn.addEventListener('click', () => switchView('host'));
+    navSplitBtn.addEventListener('click', () => switchView('split'));
+
+    // Audio Mute Toggle
+    const audioToggleBtn = document.getElementById('audio-toggle-btn');
+    const audioIcon = document.getElementById('audio-icon');
+    audioToggleBtn.addEventListener('click', () => {
+      isMuted = !isMuted;
+      audioIcon.textContent = isMuted ? '🔇' : '🔊';
+      audioToggleBtn.classList.toggle('border-rose-500', isMuted);
+    });
+
+    // Rules Modal
+    const howToPlayBtn = document.getElementById('how-to-play-btn');
+    const rulesModal = document.getElementById('rules-modal');
+    const closeRulesBtn = document.getElementById('close-rules-btn');
+    const dismissRulesBtn = document.getElementById('dismiss-rules-btn');
+
+    howToPlayBtn.addEventListener('click', () => rulesModal.classList.remove('hidden'));
+    closeRulesBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+    dismissRulesBtn.addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+    // =========================================================================
+    // 7. INTERACTIVE SCRATCHPAD / DRAWING WORK AREA
+    // =========================================================================
+    const workCanvas = document.getElementById('work-canvas');
+    const canvasHint = document.getElementById('canvas-hint');
+    const drawPenBtn = document.getElementById('draw-pen-btn');
+    const drawEraserBtn = document.getElementById('draw-eraser-btn');
+    const drawUndoBtn = document.getElementById('draw-undo-btn');
+    const drawClearBtn = document.getElementById('draw-clear-btn');
+
+    let ctx = workCanvas.getContext('2d');
+    let isDrawing = false;
+    let currentDrawingMode = 'pen'; // 'pen' or 'eraser'
+    let strokeColor = '#38bdf8'; // cyan ink
+    let strokeWidth = 3;
+    let canvasHistory = [];
+
+    function resizeWorkCanvas() {
+      if (!workCanvas) return;
+      const rect = workCanvas.parentElement.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Save content if any
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = workCanvas.width;
+      tempCanvas.height = workCanvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(workCanvas, 0, 0);
+
+      workCanvas.width = rect.width * dpr;
+      workCanvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Restore
+      if (tempCanvas.width > 0) {
+        ctx.drawImage(tempCanvas, 0, 0, rect.width, rect.height);
+      }
+    }
+
+    window.addEventListener('resize', resizeWorkCanvas);
+
+    function saveCanvasState() {
+      if (canvasHistory.length > 20) canvasHistory.shift();
+      canvasHistory.push(ctx.getImageData(0, 0, workCanvas.width, workCanvas.height));
+      canvasHint.classList.add('hidden');
+    }
+
+    function getCanvasPos(e) {
+      const rect = workCanvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    workCanvas.addEventListener('pointerdown', (e) => {
+      isDrawing = true;
+      workCanvas.setPointerCapture(e.pointerId);
+      saveCanvasState();
+      const pos = getCanvasPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = currentDrawingMode === 'pen' ? strokeColor : '#0f172a';
+      ctx.lineWidth = currentDrawingMode === 'pen' ? strokeWidth : 18;
+    });
+
+    workCanvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing) return;
+      const pos = getCanvasPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    });
+
+    function stopDrawing(e) {
+      if (isDrawing) {
+        isDrawing = false;
+        try { workCanvas.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
+    }
+
+    workCanvas.addEventListener('pointerup', stopDrawing);
+    workCanvas.addEventListener('pointercancel', stopDrawing);
+
+    drawPenBtn.addEventListener('click', () => {
+      currentDrawingMode = 'pen';
+      drawPenBtn.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold text-[11px] flex items-center gap-1 transition-all";
+      drawEraserBtn.className = "px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] flex items-center gap-1 transition-all";
+      playBeep(600, 'sine', 0.04);
+    });
+
+    drawEraserBtn.addEventListener('click', () => {
+      currentDrawingMode = 'eraser';
+      drawEraserBtn.className = "px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold text-[11px] flex items-center gap-1 transition-all";
+      drawPenBtn.className = "px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] flex items-center gap-1 transition-all";
+      playBeep(450, 'sine', 0.04);
+    });
+
+    drawClearBtn.addEventListener('click', () => {
+      clearWorkCanvas();
+      playBeep(300, 'sawtooth', 0.05);
+    });
+
+    drawUndoBtn.addEventListener('click', () => {
+      if (canvasHistory.length > 0) {
+        const lastState = canvasHistory.pop();
+        ctx.putImageData(lastState, 0, 0);
+        if (canvasHistory.length === 0) {
+          canvasHint.classList.remove('hidden');
+        }
+      }
+      playBeep(400, 'sine', 0.04);
+    });
+
+    function clearWorkCanvas() {
+      ctx.clearRect(0, 0, workCanvas.width, workCanvas.height);
+      canvasHistory = [];
+      canvasHint.classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // 8. PLAYER PROFILE & AVATAR LOGIC
+    // =========================================================================
+    const avatarPreviewBadge = document.getElementById('avatar-preview-badge');
+    const playerUsernameInput = document.getElementById('player-username-input');
+    const randomNameBtn = document.getElementById('random-name-btn');
+    const joinLobbyBtn = document.getElementById('join-lobby-btn');
+    const soloPracticeBtn = document.getElementById('solo-practice-btn');
+
+    const RANDOM_NAMES = [
+      'CosmicSolver', 'AlgebraAce', 'MathViper', 'SpeedDemon',
+      'EquationKing', 'QuantumFox', 'NumberNinja', 'VectorVortex',
+      'MatrixMaster', 'ZeroHero', 'SlopeSeeker', 'BlitzBrain'
+    ];
+
+    randomNameBtn.addEventListener('click', () => {
+      const r = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+      playerUsernameInput.value = r;
+      state.player.name = r;
+      playBeep(600, 'sine', 0.05);
+    });
+
+    // ALL AVAILABLE COLORS
+    const ALL_COLORS = [
+      'bg-indigo-600', 'bg-violet-600', 'bg-cyan-600', 'bg-emerald-600',
+      'bg-amber-600', 'bg-rose-600', 'bg-fuchsia-600', 'bg-slate-700'
+    ];
+
+    // Check if an avatar + color combination is taken by another connected player
+    function isComboClaimed(avatar, colorClass, excludeId = null) {
+      const players = Object.values(state.host.connectedPlayers);
+      return players.some(p => p.id !== excludeId && p.avatar === avatar && p.color === colorClass);
+    }
+
+    // Find first available color for a given avatar
+    function findAvailableColorForAvatar(avatar, preferredColor, excludeId = null) {
+      if (!isComboClaimed(avatar, preferredColor, excludeId)) {
+        return preferredColor;
+      }
+      for (const col of ALL_COLORS) {
+        if (!isComboClaimed(avatar, col, excludeId)) {
+          return col;
+        }
+      }
+      return preferredColor; // fallback
+    }
+
+    function updateAvatarUniquenessUI() {
+      const notice = document.getElementById('avatar-unique-notice');
+      if (!notice) return;
+      const isTaken = isComboClaimed(state.player.avatar, state.player.color, state.player.id);
+      if (isTaken) {
+        // Auto-switch to an available color
+        const availableCol = findAvailableColorForAvatar(state.player.avatar, state.player.color, state.player.id);
+        if (availableCol !== state.player.color) {
+          state.player.color = availableCol;
+          avatarPreviewBadge.className = `w-24 h-24 rounded-2xl ${availableCol} flex items-center justify-center text-4xl shadow-xl ring-4 ring-slate-800 transition-all`;
+          document.querySelectorAll('.color-option-btn').forEach(b => {
+            b.classList.toggle('ring-white', b.getAttribute('data-color') === availableCol);
+            b.classList.toggle('ring-transparent', b.getAttribute('data-color') !== availableCol);
+          });
+          notice.innerHTML = `<span class="text-amber-400 font-semibold">⚠️ Selected combo was claimed! Auto-switched to a unique background.</span>`;
+          return;
+        }
+      }
+      notice.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Unique Battler: ${state.player.avatar} is ready!</span>`;
+    }
+
+    // Avatar selections
+    document.querySelectorAll('.avatar-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-option-btn').forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
+        btn.classList.replace('border-transparent', 'border-indigo-500');
+        const chosenAvatar = btn.getAttribute('data-avatar');
+        state.player.avatar = chosenAvatar;
+        avatarPreviewBadge.textContent = chosenAvatar;
+        
+        // Ensure combo is unique
+        const validColor = findAvailableColorForAvatar(chosenAvatar, state.player.color, state.player.id);
+        if (validColor !== state.player.color) {
+          state.player.color = validColor;
+          document.querySelectorAll('.color-option-btn').forEach(b => {
+            b.classList.toggle('ring-white', b.getAttribute('data-color') === validColor);
+            b.classList.toggle('ring-transparent', b.getAttribute('data-color') !== validColor);
+          });
+        }
+        avatarPreviewBadge.className = `w-24 h-24 rounded-2xl ${state.player.color} flex items-center justify-center text-4xl shadow-xl ring-4 ring-slate-800 transition-all`;
+        updateAvatarUniquenessUI();
+        playBeep(450, 'sine', 0.05);
+      });
+    });
+
+    // Color selections
+    document.querySelectorAll('.color-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const colorClass = btn.getAttribute('data-color');
+        if (isComboClaimed(state.player.avatar, colorClass, state.player.id)) {
+          showFeedbackToast('Avatar + Color already taken by another player!', 'bg-rose-600');
+          playBeep(220, 'sawtooth', 0.1);
+          return;
+        }
+
+        document.querySelectorAll('.color-option-btn').forEach(b => b.classList.replace('ring-white', 'ring-transparent'));
+        btn.classList.replace('ring-transparent', 'ring-white');
+        avatarPreviewBadge.className = `w-24 h-24 rounded-2xl ${colorClass} flex items-center justify-center text-4xl shadow-xl ring-4 ring-slate-800 transition-all`;
+        state.player.color = colorClass;
+        updateAvatarUniquenessUI();
+        playBeep(520, 'sine', 0.05);
+      });
+    });
+
+    // Player Screens Management
+    const playerSetupCard = document.getElementById('player-setup-card');
+    const playerLobbyCard = document.getElementById('player-lobby-card');
+    const playerGameCard = document.getElementById('player-game-card');
+    const playerResultsCard = document.getElementById('player-results-card');
+    const countdownCard = document.getElementById('countdown-card');
+    const countdownNumber = document.getElementById('countdown-number');
+    const leaveLobbyBtn = document.getElementById('leave-lobby-btn');
+
+    joinLobbyBtn.addEventListener('click', () => {
+      saveProfileInputs();
+      // Enforce unique avatar combo before entering lobby
+      state.player.color = findAvailableColorForAvatar(state.player.avatar, state.player.color, state.player.id);
+      state.player.isSolo = false;
+      showPlayerScreen('lobby');
+      
+      document.getElementById('lobby-avatar-badge').textContent = state.player.avatar;
+      document.getElementById('lobby-avatar-badge').className = `w-20 h-20 rounded-2xl mx-auto flex items-center justify-center text-4xl mb-4 shadow-xl ${state.player.color}`;
+      document.getElementById('lobby-player-name').textContent = state.player.name;
+      document.getElementById('lobby-duration-text').textContent = `${Math.floor(state.host.gameDuration / 60)}:${(state.host.gameDuration % 60).toString().padStart(2, '0')}`;
+
+      sendNetworkMessage({
+        type: 'PLAYER_JOIN',
+        player: {
+          id: state.player.id,
+          name: state.player.name,
+          avatar: state.player.avatar,
+          color: state.player.color,
+          solvedCount: 0,
+          accuracy: 100,
+          streak: 0,
+          score: 0,
+          status: 'Lobby'
+        }
+      });
+      playBeep(659, 'sine', 0.1);
+    });
+
+    leaveLobbyBtn.addEventListener('click', () => {
+      showPlayerScreen('setup');
+      sendNetworkMessage({
+        type: 'PLAYER_LEAVE',
+        playerId: state.player.id
+      });
+    });
+
+    soloPracticeBtn.addEventListener('click', () => {
+      saveProfileInputs();
+      state.player.isSolo = true;
+      startCountdown(() => {
+        startPlayerGame({
+          seed: Math.floor(Math.random() * 89999) + 10000,
+          duration: state.host.gameDuration
+        });
+      });
+    });
+
+        function broadcastPlayerJoinState() {
+      sendNetworkMessage({
+        type: 'PLAYER_JOIN',
+        player: {
+          id: state.player.id,
+          name: state.player.name,
+          avatar: state.player.avatar,
+          color: state.player.color,
+          solvedCount: state.player.solvedCount,
+          accuracy: state.player.attemptsCount > 0 ? Math.round((state.player.solvedCount / state.player.attemptsCount) * 100) : 100,
+          streak: state.player.currentStreak,
+          score: state.player.score,
+          status: state.player.isInGame ? 'Solving' : 'Lobby'
+        }
+      });
+    }
+
+    function saveProfileInputs() {
+      const name = playerUsernameInput.value.trim();
+      if (name) state.player.name = name;
+    }
+
+    function showPlayerScreen(screenName) {
+      playerSetupCard.classList.add('hidden');
+      playerLobbyCard.classList.add('hidden');
+      playerGameCard.classList.add('hidden');
+      playerResultsCard.classList.add('hidden');
+      countdownCard.classList.add('hidden');
+
+      if (screenName === 'setup') playerSetupCard.classList.remove('hidden');
+      else if (screenName === 'lobby') playerLobbyCard.classList.remove('hidden');
+      else if (screenName === 'game') {
+        playerGameCard.classList.remove('hidden');
+        setTimeout(resizeWorkCanvas, 50);
+      } else if (screenName === 'results') playerResultsCard.classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // 9. GAMEPLAY & SOLVING LOGIC
+    // =========================================================================
+    let playerTimerInterval = null;
+    let playerSecondsRemaining = 120;
+
+    const currentProblemNum = document.getElementById('current-problem-num');
+    const playerTimerDisplay = document.getElementById('player-timer-display');
+    const playerScoreDisplay = document.getElementById('player-score-display');
+    const playerStreakBadge = document.getElementById('player-streak-badge');
+    const playerProgressBar = document.getElementById('player-progress-bar');
+    const equationDisplay = document.getElementById('equation-display');
+    const variableLabel = document.getElementById('variable-label');
+    const answerInput = document.getElementById('answer-input');
+    const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const skipBtn = document.getElementById('skip-btn');
+    const feedbackToast = document.getElementById('feedback-toast');
+
+    function startCountdown(onComplete) {
+      countdownCard.classList.remove('hidden');
+      let count = 3;
+      countdownNumber.textContent = count;
+      soundCountdown(false);
+
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownNumber.textContent = count;
+          countdownNumber.classList.remove('animate-pop');
+          void countdownNumber.offsetWidth;
+          countdownNumber.classList.add('animate-pop');
+          soundCountdown(false);
+        } else if (count === 0) {
+          countdownNumber.textContent = 'GO!';
+          soundCountdown(true);
+        } else {
+          clearInterval(interval);
+          countdownCard.classList.add('hidden');
+          if (onComplete) onComplete();
+        }
+      }, 900);
+    }
+
+    function startPlayerGame(gameConfig) {
+      state.player.isInGame = true;
+      state.player.currentProblemIndex = 0;
+      state.player.score = 0;
+      state.player.solvedCount = 0;
+      state.player.attemptsCount = 0;
+      state.player.currentStreak = 0;
+      state.player.bestStreak = 0;
+      state.player.history = [];
+
+      state.activeProblems = generate100Equations(gameConfig.seed);
+      playerSecondsRemaining = gameConfig.duration || state.host.gameDuration;
+
+      showPlayerScreen('game');
+      renderCurrentProblem();
+      updatePlayerStatsUI();
+
+      clearInterval(playerTimerInterval);
+      playerTimerInterval = setInterval(() => {
+        playerSecondsRemaining--;
+        updatePlayerTimerUI();
+
+        if (playerSecondsRemaining <= 0) {
+          clearInterval(playerTimerInterval);
+          endPlayerGame('Time Expired!');
+        }
+      }, 1000);
+
+      updatePlayerTimerUI();
+      setTimeout(() => {
+        resizeWorkCanvas();
+        answerInput.focus();
+      }, 150);
+    }
+
+    function updatePlayerTimerUI() {
+      const mins = Math.floor(playerSecondsRemaining / 60);
+      const secs = playerSecondsRemaining % 60;
+      playerTimerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (playerSecondsRemaining <= 10) {
+        playerTimerDisplay.className = "text-xl md:text-2xl font-black font-mono-math text-rose-500 animate-pulse tracking-wider";
+      } else if (playerSecondsRemaining <= 30) {
+        playerTimerDisplay.className = "text-xl md:text-2xl font-black font-mono-math text-amber-400 tracking-wider";
+      } else {
+        playerTimerDisplay.className = "text-xl md:text-2xl font-black font-mono-math text-white tracking-wider";
+      }
+    }
+
+    function renderCurrentProblem() {
+      if (state.player.currentProblemIndex >= state.activeProblems.length) {
+        endPlayerGame('Completed All 100 Equations!');
+        return;
+      }
+
+      const problem = state.activeProblems[state.player.currentProblemIndex];
+      currentProblemNum.textContent = problem.id;
+      equationDisplay.textContent = problem.display;
+      variableLabel.textContent = `${problem.variable} = `;
+      
+      const progressPercent = Math.min(100, (state.player.currentProblemIndex / 100) * 100);
+      playerProgressBar.style.width = `${Math.max(1, progressPercent)}%`;
+
+      answerInput.value = '';
+      answerInput.classList.remove('border-rose-500', 'border-emerald-400', 'animate-shake');
+      
+      // AUTO-CLEAR CANVAS FOR NEW PROBLEM!
+      clearWorkCanvas();
+      answerInput.focus();
+    }
+
+    function updatePlayerStatsUI() {
+      playerScoreDisplay.textContent = state.player.score;
+      playerStreakBadge.textContent = `🔥 ${state.player.currentStreak}`;
+      if (state.player.currentStreak >= 5) {
+        playerStreakBadge.className = "px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30 animate-pulse";
+      } else if (state.player.currentStreak >= 2) {
+        playerStreakBadge.className = "px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30";
+      } else {
+        playerStreakBadge.className = "px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-xs font-bold border border-slate-700";
+      }
+    }
+
+    function checkAnswer() {
+      if (!state.player.isInGame) return;
+      const rawInput = answerInput.value.trim();
+      if (rawInput === '' || rawInput === '-') return;
+
+      const userInt = parseInt(rawInput, 10);
+      if (isNaN(userInt)) return;
+
+      state.player.attemptsCount++;
+      const currentProblem = state.activeProblems[state.player.currentProblemIndex];
+      const isCorrect = userInt === currentProblem.answer;
+
+      if (isCorrect) {
+        soundCorrect();
+        state.player.solvedCount++;
+        state.player.currentStreak++;
+        if (state.player.currentStreak > state.player.bestStreak) {
+          state.player.bestStreak = state.player.currentStreak;
+        }
+
+        const streakBonus = (state.player.currentStreak - 1) * 20;
+        const points = 100 + streakBonus;
+        state.player.score += points;
+
+        showFeedbackToast(`+${points} Correct!`, 'bg-emerald-600');
+        
+        state.player.history.push({
+          id: currentProblem.id,
+          equation: currentProblem.display,
+          variable: currentProblem.variable,
+          a: currentProblem.a,
+          b: currentProblem.b,
+          c: currentProblem.c,
+          aTerm: currentProblem.aTerm,
+          bTerm: currentProblem.bTerm,
+          userAnswer: userInt,
+          correctAnswer: currentProblem.answer,
+          isCorrect: true
+        });
+
+        broadcastPlayerProgress();
+        state.player.currentProblemIndex++;
+        updatePlayerStatsUI();
+        renderCurrentProblem();
+
+      } else {
+        soundIncorrect();
+        state.player.currentStreak = 0;
+        updatePlayerStatsUI();
+        showFeedbackToast(`Try again!`, 'bg-rose-600');
+
+        answerInput.classList.add('border-rose-500', 'animate-shake');
+        setTimeout(() => {
+          answerInput.classList.remove('animate-shake');
+        }, 400);
+
+        broadcastPlayerProgress();
+      }
+    }
+
+    function skipProblem() {
+      if (!state.player.isInGame) return;
+      const currentProblem = state.activeProblems[state.player.currentProblemIndex];
+      state.player.currentStreak = 0;
+      state.player.history.push({
+        id: currentProblem.id,
+        equation: currentProblem.display,
+        variable: currentProblem.variable,
+        a: currentProblem.a,
+        b: currentProblem.b,
+        c: currentProblem.c,
+        aTerm: currentProblem.aTerm,
+        bTerm: currentProblem.bTerm,
+        userAnswer: 'Skipped',
+        correctAnswer: currentProblem.answer,
+        isCorrect: false
+      });
+      state.player.currentProblemIndex++;
+      updatePlayerStatsUI();
+      renderCurrentProblem();
+      broadcastPlayerProgress();
+      playBeep(260, 'sine', 0.1);
+    }
+
+    function toggleNegate() {
+      let val = answerInput.value;
+      if (val.startsWith('-')) {
+        answerInput.value = val.substring(1);
+      } else {
+        answerInput.value = '-' + val;
+      }
+      answerInput.focus();
+    }
+
+    function showFeedbackToast(msg, bgClass) {
+      feedbackToast.textContent = msg;
+      feedbackToast.className = `absolute top-2 left-1/2 transform -translate-x-1/2 px-3.5 py-1 rounded-full text-xs font-bold text-white shadow-lg ${bgClass} animate-pop`;
+      feedbackToast.classList.remove('hidden');
+      setTimeout(() => {
+        feedbackToast.classList.add('hidden');
+      }, 700);
+    }
+
+    function broadcastPlayerProgress() {
+      if (state.player.isSolo) return;
+      const accuracy = state.player.attemptsCount > 0 
+        ? Math.round((state.player.solvedCount / state.player.attemptsCount) * 100) 
+        : 100;
+
+      sendNetworkMessage({
+        type: 'PLAYER_UPDATE',
+        id: state.player.id,
+        name: state.player.name,
+        avatar: state.player.avatar,
+        color: state.player.color,
+        solvedCount: state.player.solvedCount,
+        attemptsCount: state.player.attemptsCount,
+        accuracy: accuracy,
+        streak: state.player.currentStreak,
+        score: state.player.score,
+        status: state.player.isInGame ? 'Solving' : 'Finished'
+      });
+    }
+
+    function endPlayerGame(reason) {
+      state.player.isInGame = false;
+      clearInterval(playerTimerInterval);
+      soundGameOver();
+
+      // ALWAYS capture the problem the player was currently on when the match ended!
+      if (state.activeProblems && state.activeProblems.length > 0) {
+        const currIdx = Math.min(state.player.currentProblemIndex, state.activeProblems.length - 1);
+        const currProblem = state.activeProblems[currIdx];
+        const alreadyInHistory = state.player.history.some(h => h.id === currProblem.id);
+        if (!alreadyInHistory) {
+          const rawVal = answerInput ? answerInput.value.trim() : '';
+          state.player.history.push({
+            id: currProblem.id,
+            equation: currProblem.display,
+            variable: currProblem.variable,
+            a: currProblem.a,
+            b: currProblem.b,
+            c: currProblem.c,
+            aTerm: currProblem.aTerm,
+            bTerm: currProblem.bTerm,
+            userAnswer: rawVal !== '' ? rawVal : 'In Progress',
+            correctAnswer: currProblem.answer,
+            isCorrect: false,
+            statusText: reason || 'Ended by Host'
+          });
+        }
+      }
+
+      showPlayerScreen('results');
+      document.getElementById('game-over-reason').textContent = reason || 'Game Ended';
+      document.getElementById('results-solved-count').textContent = state.player.solvedCount;
+      
+      const acc = state.player.attemptsCount > 0 
+        ? Math.round((state.player.solvedCount / state.player.attemptsCount) * 100) 
+        : 100;
+      document.getElementById('results-accuracy').textContent = `${acc}%`;
+      document.getElementById('results-attempts-sub').textContent = `${state.player.attemptsCount} attempts`;
+      document.getElementById('results-best-streak').textContent = state.player.bestStreak;
+      document.getElementById('results-final-score').textContent = state.player.score;
+
+      // Initialize interactive worked review starting at question 1
+      state.reviewIndex = 0;
+      renderCurrentReviewQuestion();
+      broadcastPlayerProgress();
+    }
+
+    // =========================================================================
+    // 10. STEP-BY-STEP WORKED SOLUTIONS REVIEW (ONE AT A TIME, NO SEPARATOR BAR)
+    // =========================================================================
+    const reviewCounterBadge = document.getElementById('review-counter-badge');
+    const reviewPrevBtn = document.getElementById('review-prev-btn');
+    const reviewNextBtn = document.getElementById('review-next-btn');
+    const reviewQuestionDisplayArea = document.getElementById('review-question-display-area');
+
+    const toggleReviewModeBtn = document.getElementById('toggle-review-mode-btn');
+    if (toggleReviewModeBtn) {
+      toggleReviewModeBtn.addEventListener('click', () => {
+        reviewAll100Mode = !reviewAll100Mode;
+        state.reviewIndex = 0;
+        renderCurrentReviewQuestion();
+        playBeep(550, 'sine', 0.05);
+      });
+    }
+
+    reviewPrevBtn.addEventListener('click', () => {
+      if (state.reviewIndex > 0) {
+        state.reviewIndex--;
+        renderCurrentReviewQuestion();
+        playBeep(480, 'sine', 0.05);
+      }
+    });
+
+    reviewNextBtn.addEventListener('click', () => {
+      if (state.reviewIndex < state.player.history.length - 1) {
+        state.reviewIndex++;
+        renderCurrentReviewQuestion();
+        playBeep(520, 'sine', 0.05);
+      }
+    });
+
+    let reviewAll100Mode = false;
+
+    function renderCurrentReviewQuestion() {
+      const toggleModeBtn = document.getElementById('toggle-review-mode-btn');
+      if (toggleModeBtn) {
+        toggleModeBtn.textContent = reviewAll100Mode ? 'Show Attempted' : 'Browse All 100';
+      }
+
+      // Determine item list
+      let reviewList = reviewAll100Mode ? state.activeProblems : state.player.history;
+      
+      // If history is empty, fall back to activeProblems
+      if (reviewList.length === 0) {
+        reviewList = state.activeProblems;
+        reviewAll100Mode = true;
+        if (toggleModeBtn) toggleModeBtn.textContent = 'Show Attempted';
+      }
+
+      const total = reviewList.length;
+      if (state.reviewIndex >= total) state.reviewIndex = Math.max(0, total - 1);
+      const idx = state.reviewIndex;
+      const rawItem = reviewList[idx];
+
+      reviewCounterBadge.textContent = `${reviewAll100Mode ? 'Problem' : 'Question'} ${idx + 1} of ${total}`;
+      reviewPrevBtn.disabled = idx === 0;
+      reviewNextBtn.disabled = idx === total - 1;
+      reviewPrevBtn.classList.toggle('opacity-40', idx === 0);
+      reviewNextBtn.classList.toggle('opacity-40', idx === total - 1);
+
+      // Normalize item format
+      const isHistoryItem = !reviewAll100Mode;
+      const a = rawItem.a;
+      const b = rawItem.b;
+      const c = rawItem.c;
+      const v = rawItem.variable;
+      const aTerm = rawItem.aTerm || (a === 1 ? v : (a === -1 ? `-${v}` : `${a}${v}`));
+      const bTerm = rawItem.bTerm || (b > 0 ? `+ ${b}` : `- ${Math.abs(b)}`);
+      const eqDisplay = rawItem.display || rawItem.equation;
+      const correctAns = rawItem.correctAnswer !== undefined ? rawItem.correctAnswer : rawItem.answer;
+      const userAns = rawItem.userAnswer !== undefined ? rawItem.userAnswer : '-';
+      const isCorrect = rawItem.isCorrect || false;
+      const statusText = rawItem.statusText || '';
+      const intermediateC = c - b;
+      
+      // Inverse of b: if b > 0 (+b), inverse is -b; if b < 0 (-|b|), inverse is +|b|
+      const inverseB = b > 0 ? `- ${b}` : `+ ${Math.abs(b)}`;
+      const step1Text = b > 0 ? `Subtract ${b} from both sides` : `Add ${Math.abs(b)} to both sides`;
+      const step2Text = `Divide both sides by ${a}`;
+
+      // Chalkboard vertical alignment formatting:
+      // Line 1: ax + b = c
+      // Line 2: -b under both sides
+      // Line 3: ax = c - b (on next line, NO long horizontal separator bar!)
+      // Line 4: fraction bar under each side with a underneath
+      // Line 5: x = answer (on next line, NO long horizontal separator bar!)
+
+      reviewQuestionDisplayArea.innerHTML = `
+        <!-- Top Status Banner for this question -->
+        <div class="flex items-center justify-between p-3 rounded-2xl ${isCorrect ? 'bg-emerald-950/40 border border-emerald-800/60' : 'bg-rose-950/40 border border-rose-800/60'}">
+          <div class="flex items-center gap-2">
+            <span class="text-base font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isCorrect ? '✓ Correct' : '✗ Incorrect'}
+            </span>
+            <span class="text-xs text-slate-300">Problem #${rawItem.id || (idx + 1)}</span>
+          </div>
+          <div class="text-xs font-mono-math">
+            Your answer: <span class="${isCorrect ? 'text-emerald-300 font-bold' : 'text-rose-300 font-bold'}">${userAns}</span>
+            ${!isCorrect ? `<span class="text-slate-400 ml-1">| Correct: <strong class="text-emerald-400">${correctAns}</strong></span>` : ''}
+          </div>
+        </div>
+
+        <!-- Chalkboard Vertical Worked Equation Card (NO SEPARATOR BARS) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 font-mono-math text-center relative overflow-hidden shadow-inner">
+          
+          <div class="text-[11px] font-sans font-semibold text-slate-400 uppercase tracking-wider mb-3 text-left flex items-center justify-between">
+            <span>Classroom Chalkboard Steps</span>
+            <span class="text-indigo-400 font-mono">Format: ax + b = c</span>
+          </div>
+
+          <div class="space-y-4 max-w-sm mx-auto text-left text-sm sm:text-base">
+            
+            <!-- STEP 1: UNDO CONSTANT (STRICT 4-COLUMN ALIGNED MATHEMATICAL GRID) -->
+            <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+              <div class="text-[10px] font-sans text-indigo-400 font-semibold mb-2">
+                Step 1: ${step1Text}
+              </div>
+              
+              <div class="inline-grid grid-cols-4 gap-x-4 gap-y-1 font-mono-math text-base sm:text-lg font-bold items-center text-center">
+                <!-- Row 1: ax + b = c -->
+                <span class="text-left text-slate-100">${aTerm}</span>
+                <span class="text-center text-slate-100">${bTerm}</span>
+                <span class="text-center text-slate-400">=</span>
+                <span class="text-right text-slate-100">${c}</span>
+
+                <!-- Row 2: -b under bTerm, and -b directly under c -->
+                <span></span>
+                <span class="text-center text-amber-400">${inverseB}</span>
+                <span></span>
+                <span class="text-right text-amber-400">${inverseB}</span>
+
+                <!-- Row 3: Result ax = c - b directly below (no separating bar) -->
+                <span class="text-left text-cyan-300">${aTerm}</span>
+                <span></span>
+                <span class="text-center text-slate-400">=</span>
+                <span class="text-right text-cyan-300">${intermediateC}</span>
+              </div>
+            </div>
+
+            <!-- STEP 2: UNDO COEFFICIENT (FRACTION BARS) -->
+            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80">
+              <div class="text-[10px] font-sans text-indigo-400 font-semibold mb-2">
+                Step 2: ${step2Text}
+              </div>
+
+              <!-- Fraction Bars Row -->
+              <div class="flex items-center gap-2 text-base sm:text-lg font-bold">
+                <!-- Left Fraction -->
+                <div class="inline-flex flex-col items-center">
+                  <span class="text-cyan-300">${aTerm}</span>
+                  <span class="w-full border-t-2 border-slate-400 my-0.5"></span>
+                  <span class="text-amber-400">${a}</span>
+                </div>
+
+                <span class="text-slate-300 mx-1">=</span>
+
+                <!-- Right Fraction -->
+                <div class="inline-flex flex-col items-center">
+                  <span class="text-cyan-300">${intermediateC}</span>
+                  <span class="w-full border-t-2 border-slate-400 my-0.5"></span>
+                  <span class="text-amber-400">${a}</span>
+                </div>
+              </div>
+
+              <!-- Final Result on next line (NO LONG SEPARATOR BAR) -->
+              <div class="text-emerald-400 font-extrabold text-lg sm:text-xl pt-2">
+                ${v} = ${correctAns}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      `;
+    }
+
+    // Input listeners
+    submitAnswerBtn.addEventListener('click', checkAnswer);
+    answerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        checkAnswer();
+      }
+    });
+        skipBtn.addEventListener('click', skipProblem);
+
+    document.getElementById('results-play-again-btn').addEventListener('click', () => {
+      showPlayerScreen('setup');
+    });
+
+    // =========================================================================
+    // 11. HOST MISSION CONTROL & PODIUM FOR TOP 3 WITH DANCING AVATARS
+    // =========================================================================
+    const hostDurationBtns = document.querySelectorAll('.duration-btn');
+    const hostCustomDuration = document.getElementById('host-custom-duration');
+    const hostApplyDurationBtn = document.getElementById('host-apply-duration-btn');
+    const hostSeedDisplay = document.getElementById('host-seed-display');
+    const hostRerollSeedBtn = document.getElementById('host-reroll-seed-btn');
+    const hostStartGameBtn = document.getElementById('host-start-game-btn');
+    const hostEndGameBtn = document.getElementById('host-end-game-btn');
+    const hostTimerDisplay = document.getElementById('host-timer-display');
+    const hostStatusBadge = document.getElementById('host-status-badge');
+    const hostPlayerCountBadge = document.getElementById('host-player-count-badge');
+    const hostLeaderboardTbody = document.getElementById('host-leaderboard-tbody');
+    const hostPodiumCard = document.getElementById('host-podium-card');
+    const hostLiveRosterCard = document.getElementById('host-live-roster-card');
+    const podiumNewGameBtn = document.getElementById('podium-new-game-btn');
+
+    hostDurationBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        hostDurationBtns.forEach(b => b.className = "duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200");
+        btn.className = "duration-btn py-2 px-3 rounded-xl bg-indigo-600 border border-indigo-500 text-xs font-bold text-white shadow";
+        const secs = parseInt(btn.getAttribute('data-seconds'), 10);
+        setHostDuration(secs);
+      });
+    });
+
+    hostApplyDurationBtn.addEventListener('click', () => {
+      const secs = parseInt(hostCustomDuration.value, 10);
+      if (secs && secs >= 10 && secs <= 1800) {
+        setHostDuration(secs);
+        hostDurationBtns.forEach(b => b.className = "duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200");
+      }
+    });
+
+    function setHostDuration(secs) {
+      state.host.gameDuration = secs;
+      state.host.remainingSeconds = secs;
+      updateHostTimerUI();
+      sendNetworkMessage({
+        type: 'HOST_HELLO',
+        duration: secs,
+        seed: state.host.seed
+      });
+    }
+
+    function updateHostTimerUI() {
+      const mins = Math.floor(state.host.remainingSeconds / 60);
+      const secs = state.host.remainingSeconds % 60;
+      hostTimerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    hostRerollSeedBtn.addEventListener('click', () => {
+      const newSeed = Math.floor(Math.random() * 89999) + 10000;
+      state.host.seed = newSeed;
+      state.host.problems = generate100Equations(newSeed);
+      state.activeProblems = state.host.problems;
+      hostSeedDisplay.textContent = `#${newSeed}`;
+      playBeep(580, 'sine', 0.08);
+
+      sendNetworkMessage({
+        type: 'HOST_HELLO',
+        duration: state.host.gameDuration,
+        seed: state.host.seed
+      });
+    });
+
+    hostStartGameBtn.addEventListener('click', () => {
+      if (state.host.gameStatus === 'PLAYING') return;
+
+      hostPodiumCard.classList.add('hidden');
+      hostLiveRosterCard.classList.remove('hidden');
+
+      state.host.gameStatus = 'COUNTDOWN';
+      hostStatusBadge.textContent = 'COUNTDOWN';
+      hostStatusBadge.className = 'px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs';
+
+      sendNetworkMessage({
+        type: 'START_GAME',
+        seed: state.host.seed,
+        duration: state.host.gameDuration
+      });
+
+      startCountdown(() => {
+        state.host.gameStatus = 'PLAYING';
+        hostStatusBadge.textContent = 'LIVE GAME';
+        hostStatusBadge.className = 'px-3.5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs';
+        
+        hostStartGameBtn.disabled = true;
+        hostStartGameBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        hostEndGameBtn.disabled = false;
+        hostEndGameBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        state.host.remainingSeconds = state.host.gameDuration;
+        clearInterval(state.host.timerInterval);
+        state.host.timerInterval = setInterval(() => {
+          state.host.remainingSeconds--;
+          updateHostTimerUI();
+
+          if (state.host.remainingSeconds <= 0) {
+            clearInterval(state.host.timerInterval);
+            endHostGame('Time Expired!');
+          }
+        }, 1000);
+        updateHostTimerUI();
+
+        if (state.player.isInGame === false && !playerLobbyCard.classList.contains('hidden')) {
+          startPlayerGame({
+            seed: state.host.seed,
+            duration: state.host.gameDuration
+          });
+        }
+      });
+    });
+
+    hostEndGameBtn.addEventListener('click', () => {
+      endHostGame('Host Ended Game');
+    });
+
+    function endHostGame(reason) {
+      state.host.gameStatus = 'ENDED';
+      clearInterval(state.host.timerInterval);
+
+      hostStatusBadge.textContent = 'GAME FINISHED';
+      hostStatusBadge.className = 'px-3.5 py-2 rounded-2xl bg-slate-800 text-slate-400 font-bold text-xs';
+
+      hostStartGameBtn.disabled = false;
+      hostStartGameBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      hostEndGameBtn.disabled = true;
+      hostEndGameBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      sendNetworkMessage({
+        type: 'END_GAME',
+        reason: reason || 'Ended by Host'
+      });
+
+      try {
+        if (state.player.isInGame) {
+          endPlayerGame(reason);
+        }
+      } catch (err) {
+        console.error("Error in endPlayerGame:", err);
+      }
+
+      // DISPLAY THE PODIUM AND TOP 10 FINISHERS ON HOST SCREEN!
+      try {
+        showHostPodium();
+      } catch (err) {
+        console.error("Error in showHostPodium:", err);
+      }
+    }
+
+    function showHostPodium() {
+      ensureMockPlayersForHost();
+      const players = Object.values(state.host.connectedPlayers);
+      players.sort((a, b) => (b.solvedCount - a.solvedCount) || (b.score - a.score) || (b.accuracy - a.accuracy));
+
+      hostLiveRosterCard.classList.add('hidden');
+      hostPodiumCard.classList.remove('hidden');
+
+      // Top 3 for Podium
+      const p1 = players[0] || { name: 'Player 1', avatar: '🦊', solvedCount: 0, score: 0, color: 'bg-indigo-600' };
+      const p2 = players[1] || { name: 'Player 2', avatar: '🦉', solvedCount: 0, score: 0, color: 'bg-slate-700' };
+      const p3 = players[2] || { name: 'Player 3', avatar: '🤖', solvedCount: 0, score: 0, color: 'bg-amber-800' };
+
+      // 1st place
+      document.getElementById('podium-avatar-1').textContent = p1.avatar;
+      document.getElementById('podium-avatar-1').className = `w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ${p1.color || 'bg-indigo-600'} flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-amber-500/30 border-4 border-amber-400 mb-2 animate-dance`;
+      document.getElementById('podium-name-1').textContent = p1.name;
+      document.getElementById('podium-score-1').textContent = `${p1.solvedCount} solved (${p1.score} pts)`;
+
+      // 2nd place
+      document.getElementById('podium-avatar-2').textContent = p2.avatar;
+      document.getElementById('podium-avatar-2').className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p2.color || 'bg-slate-700'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-slate-500/20 border-2 border-slate-400 mb-2 animate-dance-delay-1`;
+      document.getElementById('podium-name-2').textContent = p2.name;
+      document.getElementById('podium-score-2').textContent = `${p2.solvedCount} solved (${p2.score} pts)`;
+
+      // 3rd place
+      document.getElementById('podium-avatar-3').textContent = p3.avatar;
+      document.getElementById('podium-avatar-3').className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p3.color || 'bg-amber-800'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-700/20 border-2 border-amber-600 mb-2 animate-dance-delay-2`;
+      document.getElementById('podium-name-3').textContent = p3.name;
+      document.getElementById('podium-score-3').textContent = `${p3.solvedCount} solved (${p3.score} pts)`;
+
+      // Ranks 4 through 10
+      const topTenList = document.getElementById('top-ten-list');
+      topTenList.innerHTML = '';
+      const restPlayers = players.slice(3, 10);
+
+      if (restPlayers.length === 0) {
+        topTenList.innerHTML = '<div class="text-xs text-slate-500 py-2">No other players in this match.</div>';
+      } else {
+        restPlayers.forEach((p, idx) => {
+          const row = document.createElement('div');
+          row.className = "p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs";
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-500 w-5">#${idx + 4}</span>
+              <span class="w-6 h-6 rounded-lg ${p.color || 'bg-slate-800'} flex items-center justify-center text-xs">${p.avatar}</span>
+              <span class="font-semibold text-slate-200">${p.name}</span>
+            </div>
+            <div class="flex items-center gap-4 font-mono-math">
+              <span class="text-indigo-300 font-bold">${p.solvedCount} solved</span>
+              <span class="text-slate-400">${p.accuracy || 100}% acc</span>
+              <span class="text-cyan-400 font-bold">${p.score} pts</span>
+            </div>
+          `;
+          topTenList.appendChild(row);
+        });
+      }
+    }
+
+    podiumNewGameBtn.addEventListener('click', () => {
+      hostPodiumCard.classList.add('hidden');
+      hostLiveRosterCard.classList.remove('hidden');
+      state.host.gameStatus = 'LOBBY';
+      hostStatusBadge.textContent = 'LOBBY OPEN';
+      hostStatusBadge.className = 'px-3.5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold text-xs';
+    });
+
+    function renderHostLeaderboard() {
+      const players = Object.values(state.host.connectedPlayers);
+      hostPlayerCountBadge.textContent = `${players.length} player${players.length === 1 ? '' : 's'}`;
+
+      if (players.length === 0) {
+        hostLeaderboardTbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-500">
+              No players in lobby yet. Join in the Player view or open another tab to connect!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      players.sort((a, b) => (b.solvedCount - a.solvedCount) || (b.score - a.score) || (b.accuracy - a.accuracy));
+
+      hostLeaderboardTbody.innerHTML = '';
+      players.forEach((p, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        
+        let rankBadge = `<span class="font-bold text-slate-400">#${idx + 1}</span>`;
+        if (idx === 0) rankBadge = `<span class="text-amber-300 font-bold">🥇 1</span>`;
+        if (idx === 1) rankBadge = `<span class="text-slate-300 font-bold">🥈 2</span>`;
+        if (idx === 2) rankBadge = `<span class="text-amber-600 font-bold">🥉 3</span>`;
+
+        tr.innerHTML = `
+          <td class="py-3 px-3">${rankBadge}</td>
+          <td class="py-3 px-3">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg ${p.color || 'bg-indigo-600'} flex items-center justify-center text-sm shadow">
+                ${p.avatar || '🦊'}
+              </span>
+              <span class="font-semibold text-slate-100">${p.name}</span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center font-mono-math font-bold text-indigo-300">${p.solvedCount || 0} <span class="text-slate-500 text-[10px]">/ 100</span></td>
+          <td class="py-3 px-3 text-center font-mono-math ${p.accuracy >= 90 ? 'text-emerald-400' : 'text-slate-300'}">${p.accuracy || 100}%</td>
+          <td class="py-3 px-3 text-center font-mono-math text-amber-300">🔥 ${p.streak || 0}</td>
+          <td class="py-3 px-3 text-right font-mono-math font-bold text-cyan-300">${p.score || 0}</td>
+          <td class="py-3 px-3 text-right">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${p.status === 'Solving' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">
+              ${p.status || 'Ready'}
+            </span>
+          </td>
+        `;
+        hostLeaderboardTbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('host-clear-players-btn').addEventListener('click', () => {
+      state.host.connectedPlayers = {};
+      renderHostLeaderboard();
+    });
+
+    // =========================================================================
+    // 12. SPLIT-SCREEN / MULTI-TAB LIVE SYNC TEST
+    // =========================================================================
+    function setupSplitView() {
+      const hostPane = document.getElementById('split-host-pane');
+      const playerPane = document.getElementById('split-player-pane');
+
+      hostPane.innerHTML = `
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+          <div class="font-bold text-sm text-amber-400 flex items-center gap-1.5">
+            <span>👑</span> Host Controls
+          </div>
+          <div class="text-xs font-mono text-slate-400" id="split-host-timer">02:00</div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+            <span class="text-slate-400">Duration:</span>
+            <span class="font-bold text-white">${state.host.gameDuration}s</span>
+            <span class="text-slate-400">Seed:</span>
+            <span class="font-mono text-cyan-300">#${state.host.seed}</span>
+          </div>
+          <button id="split-start-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all">
+            🚀 Start Game for Player
+          </button>
+          <button id="split-end-btn" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all">
+            ⏹️ End Game Now
+          </button>
+          <div class="pt-2">
+            <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">Live Leaderboard Monitor</div>
+            <div id="split-leaderboard" class="text-xs space-y-1 max-h-36 overflow-y-auto"></div>
+          </div>
+        </div>
+      `;
+
+      playerPane.innerHTML = `
+        <div class="w-full">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div class="font-bold text-sm text-indigo-400 flex items-center gap-1.5">
+              <span>🎮</span> Player View
+            </div>
+            <div class="text-xs font-mono text-slate-400" id="split-player-timer">02:00</div>
+          </div>
+          <div id="split-player-content" class="text-center py-4">
+            <p class="text-xs text-slate-400 mb-3">Click 'Start Game' on the host pane to test simultaneous play!</p>
+            <div class="w-16 h-16 rounded-2xl bg-indigo-600 mx-auto flex items-center justify-center text-3xl mb-2">🦊</div>
+            <div class="text-sm font-bold text-white">MathWizard Ready</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('split-start-btn').addEventListener('click', () => {
+        hostStartGameBtn.click();
+      });
+      document.getElementById('split-end-btn').addEventListener('click', () => {
+        hostEndGameBtn.click();
+      });
+
+      updateSplitLeaderboard();
+    }
+
+    function updateSplitLeaderboard() {
+      const el = document.getElementById('split-leaderboard');
+      if (!el) return;
+      const players = Object.values(state.host.connectedPlayers);
+      if (players.length === 0) {
+        el.innerHTML = '<div class="text-[11px] text-slate-500">Waiting for player scores...</div>';
+        return;
+      }
+      el.innerHTML = players.map(p => `
+        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 flex items-center justify-between text-[11px]">
+          <span class="font-medium text-slate-200">${p.avatar} ${p.name}</span>
+          <span class="font-mono text-indigo-300 font-bold">${p.solvedCount} solved</span>
+          <span class="font-mono text-cyan-300 font-bold">${p.score} pts</span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('clear-events-btn').addEventListener('click', () => {
+      document.getElementById('event-log-container').innerHTML = '<div class="text-[11px] text-slate-500">Log cleared.</div>';
+    });
+
+    // =========================================================================
+    // 13. INCOMING NETWORK MESSAGES HANDLER (CROSS-TAB SYNC)
+    // =========================================================================
+    function handleIncomingMessage(msg, isLoopback = false) {
+      if (!msg || !msg.type) return;
+      if (!isLoopback) logNetworkEvent(msg.type, msg);
+
+      if (msg.type === 'HOST_DISCOVERY_PING') {
+        // Player responds if waiting in lobby or active in game
+        if (!playerLobbyCard.classList.contains('hidden') || state.player.isInGame) {
+          if (!isLoopback) {
+            broadcastPlayerJoinState();
+          }
+        }
+      }
+
+      if (msg.type === 'HOST_HELLO') {
+        state.host.gameDuration = msg.duration;
+        state.host.seed = msg.seed;
+        document.getElementById('lobby-duration-text').textContent = `${Math.floor(msg.duration / 60)}:${(msg.duration % 60).toString().padStart(2, '0')}`;
+        // If player is in lobby, announce presence to host
+        if (!playerLobbyCard.classList.contains('hidden') && !isLoopback) {
+          broadcastPlayerJoinState();
+        }
+      }
+
+      if (msg.type === 'PLAYER_JOIN') {
+        state.host.connectedPlayers[msg.player.id] = msg.player;
+        renderHostLeaderboard();
+        updateSplitLeaderboard();
+        if (state.currentView === 'host' && !isLoopback) {
+          sendNetworkMessage({
+            type: 'HOST_HELLO',
+            duration: state.host.gameDuration,
+            seed: state.host.seed
+          });
+        }
+      }
+
+      if (msg.type === 'PLAYER_LEAVE') {
+        delete state.host.connectedPlayers[msg.playerId];
+        renderHostLeaderboard();
+        updateSplitLeaderboard();
+      }
+
+      if (msg.type === 'PLAYER_UPDATE') {
+        state.host.connectedPlayers[msg.id] = {
+          id: msg.id,
+          name: msg.name,
+          avatar: msg.avatar,
+          color: msg.color,
+          solvedCount: msg.solvedCount,
+          attemptsCount: msg.attemptsCount,
+          accuracy: msg.accuracy,
+          streak: msg.streak,
+          score: msg.score,
+          status: msg.status
+        };
+        renderHostLeaderboard();
+        updateSplitLeaderboard();
+      }
+
+      if (msg.type === 'START_GAME') {
+        state.host.seed = msg.seed;
+        state.host.gameDuration = msg.duration;
+        if (!playerLobbyCard.classList.contains('hidden') || state.player.isInGame) {
+          startCountdown(() => {
+            startPlayerGame({
+              seed: msg.seed,
+              duration: msg.duration
+            });
+          });
+        }
+      }
+
+      if (msg.type === 'END_GAME') {
+        state.host.gameStatus = 'ENDED';
+        try {
+          if (state.player.isInGame) {
+            endPlayerGame(msg.reason || 'Host Ended the Game');
+          }
+        } catch (err) {
+          console.error("Error ending player game on broadcast:", err);
+        }
+        try {
+          showHostPodium();
+        } catch (err) {
+          console.error("Error showing host podium on broadcast:", err);
+        }
+      }
+    }
+
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        handleIncomingMessage(event.data);
+      };
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHANNEL_NAME && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue);
+          handleIncomingMessage(data);
+        } catch (e) {}
+      }
+    });
+
+    
+    // Continuous lobby discovery heartbeat
+    setInterval(() => {
+      if (state.host.gameStatus === 'LOBBY' || state.currentView === 'host') {
+        sendNetworkMessage({
+          type: 'HOST_DISCOVERY_PING',
+          time: Date.now()
+        });
+      }
+    }, 1500);
+
+        // Room code inputs
+    const playerRoomInput = document.getElementById('player-room-input');
+    const hostRoomInput = document.getElementById('host-room-input');
+
+    if (playerRoomInput) {
+      playerRoomInput.addEventListener('input', () => {
+        currentRoomCode = playerRoomInput.value.trim().toUpperCase() || 'BLITZ1';
+        if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+        document.getElementById('lobby-room-code').textContent = '#' + currentRoomCode;
+      });
+    }
+
+    if (hostRoomInput) {
+      hostRoomInput.addEventListener('input', () => {
+        currentRoomCode = hostRoomInput.value.trim().toUpperCase() || 'BLITZ1';
+        if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+      });
+    }
+
+    // Firebase Settings Modal Listeners
+    const firebaseConfigBtn = document.getElementById('firebase-config-btn');
+    const firebaseModal = document.getElementById('firebase-modal');
+    const closeFirebaseModalBtn = document.getElementById('close-firebase-modal-btn');
+    const dismissFirebaseBtn = document.getElementById('dismiss-firebase-btn');
+    const saveFirebaseBtn = document.getElementById('save-firebase-btn');
+    const clearFirebaseBtn = document.getElementById('clear-firebase-btn');
+    const firebaseConfigInput = document.getElementById('firebase-config-input');
+
+    firebaseConfigBtn.addEventListener('click', () => {
+      const existing = getStoredFirebaseConfig();
+      if (existing) {
+        firebaseConfigInput.value = JSON.stringify(existing, null, 2);
+      }
+      firebaseModal.classList.remove('hidden');
+    });
+
+    closeFirebaseModalBtn.addEventListener('click', () => firebaseModal.classList.add('hidden'));
+    dismissFirebaseBtn.addEventListener('click', () => firebaseModal.classList.add('hidden'));
+
+    saveFirebaseBtn.addEventListener('click', () => {
+      const raw = firebaseConfigInput.value.trim();
+      if (!raw) return;
+      try {
+        let parsed = null;
+        if (raw.startsWith('{')) {
+          parsed = JSON.parse(raw);
+        } else if (raw.includes('firebaseio.com')) {
+          parsed = { databaseURL: raw, apiKey: 'auto', projectId: 'online' };
+        }
+        if (parsed) {
+          localStorage.setItem('algebra_blitz_firebase_cfg', JSON.stringify(parsed));
+          initFirebase(parsed);
+          firebaseModal.classList.add('hidden');
+          playBeep(780, 'sine', 0.15);
+        }
+      } catch (err) {
+        showFeedbackToast('Invalid JSON Config!', 'bg-rose-600');
+      }
+    });
+
+    clearFirebaseBtn.addEventListener('click', () => {
+      localStorage.removeItem('algebra_blitz_firebase_cfg');
+      firebaseConfigInput.value = '';
+      isFirebaseOnline = false;
+      updateNetworkStatusUI(false);
+      firebaseModal.classList.add('hidden');
+      playBeep(300, 'sawtooth', 0.1);
+    });
+
+    // Attempt auto-connect on startup if config is saved
+    const savedCfg = getStoredFirebaseConfig();
+    if (savedCfg) {
+      initFirebase(savedCfg);
+    }
+
+    sendNetworkMessage({
+      type: 'PLAYER_PING',
+      time: Date.now()
+    });
+
+  </script>
+</body>
+</html>
