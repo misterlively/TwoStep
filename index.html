@@ -975,7 +975,20 @@
     let playerRef = null;
     let isFirebaseOnline = false;
 
-    // Load saved or default Firebase config
+    // =========================================================================
+    // ⬇️ PASTE YOUR FIREBASE CONFIG HERE (Between the curly braces) ⬇️
+    // =========================================================================
+    const HARDCODED_FIREBASE_CONFIG = {
+      apiKey: "PASTE_API_KEY_HERE",
+      authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://PASTE_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "PASTE_PROJECT_ID",
+      storageBucket: "PASTE_PROJECT_ID.appspot.com",
+      messagingSenderId: "PASTE_SENDER_ID",
+      appId: "PASTE_APP_ID"
+    };
+
+    // Load saved or hardcoded Firebase config
     function getStoredFirebaseConfig() {
       try {
         const stored = localStorage.getItem('algebra_blitz_firebase_cfg');
@@ -983,6 +996,10 @@
           return JSON.parse(stored);
         }
       } catch (e) {}
+      // Use hardcoded config if valid values have been pasted
+      if (HARDCODED_FIREBASE_CONFIG && HARDCODED_FIREBASE_CONFIG.apiKey && !HARDCODED_FIREBASE_CONFIG.apiKey.startsWith('PASTE_')) {
+        return HARDCODED_FIREBASE_CONFIG;
+      }
       return null;
     }
 
