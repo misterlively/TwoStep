@@ -375,6 +375,62 @@
 
     if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
 
+    // Cross-tab BroadcastChannel & localStorage listeners for local testing
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+        if (msg.type === 'START_GAME') {
+          if (!state.player.isInGame && !playerLobbyCard.classList.contains('hidden')) {
+            startCountdown(() => {
+              startPlayerGame({
+                seed: msg.seed || 49218,
+                duration: msg.duration || 120
+              });
+            });
+          }
+        } else if (msg.type === 'END_GAME') {
+          if (state.player.isInGame) {
+            endPlayerGame(msg.reason || 'Host Ended Game');
+          }
+        } else if (msg.type === 'HOST_DISCOVERY_PING') {
+          if (!playerLobbyCard.classList.contains('hidden')) {
+            sendNetworkMessage({
+              type: 'PLAYER_JOIN',
+              player: {
+                id: state.player.id, name: state.player.name, avatar: state.player.avatar,
+                color: state.player.color, solvedCount: state.player.solvedCount,
+                accuracy: 100, streak: 0, score: 0, status: 'Lobby'
+              }
+            });
+          }
+        }
+      };
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHANNEL_NAME && event.newValue) {
+        try {
+          const msg = JSON.parse(event.newValue);
+          if (msg.type === 'START_GAME') {
+            if (!state.player.isInGame && !playerLobbyCard.classList.contains('hidden')) {
+              startCountdown(() => {
+                startPlayerGame({
+                  seed: msg.seed || 49218,
+                  duration: msg.duration || 120
+                });
+              });
+            }
+          } else if (msg.type === 'END_GAME') {
+            if (state.player.isInGame) {
+              endPlayerGame(msg.reason || 'Host Ended Game');
+            }
+          }
+        } catch(e) {}
+      }
+    });
+
+
     function sendNetworkMessage(msg) {
       if (broadcastChannel) { try { broadcastChannel.postMessage(msg); } catch(e) {} }
       try { localStorage.setItem(CHANNEL_NAME, JSON.stringify({ ...msg, _t: Date.now() })); } catch(e) {}
@@ -633,6 +689,62 @@
       const name = playerUsernameInput.value.trim(); if (name) state.player.name = name;
       currentRoomCode = playerRoomInput.value.trim().toUpperCase() || 'BLITZ1';
       if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+
+    // Cross-tab BroadcastChannel & localStorage listeners for local testing
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+        if (msg.type === 'START_GAME') {
+          if (!state.player.isInGame && !playerLobbyCard.classList.contains('hidden')) {
+            startCountdown(() => {
+              startPlayerGame({
+                seed: msg.seed || 49218,
+                duration: msg.duration || 120
+              });
+            });
+          }
+        } else if (msg.type === 'END_GAME') {
+          if (state.player.isInGame) {
+            endPlayerGame(msg.reason || 'Host Ended Game');
+          }
+        } else if (msg.type === 'HOST_DISCOVERY_PING') {
+          if (!playerLobbyCard.classList.contains('hidden')) {
+            sendNetworkMessage({
+              type: 'PLAYER_JOIN',
+              player: {
+                id: state.player.id, name: state.player.name, avatar: state.player.avatar,
+                color: state.player.color, solvedCount: state.player.solvedCount,
+                accuracy: 100, streak: 0, score: 0, status: 'Lobby'
+              }
+            });
+          }
+        }
+      };
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHANNEL_NAME && event.newValue) {
+        try {
+          const msg = JSON.parse(event.newValue);
+          if (msg.type === 'START_GAME') {
+            if (!state.player.isInGame && !playerLobbyCard.classList.contains('hidden')) {
+              startCountdown(() => {
+                startPlayerGame({
+                  seed: msg.seed || 49218,
+                  duration: msg.duration || 120
+                });
+              });
+            }
+          } else if (msg.type === 'END_GAME') {
+            if (state.player.isInGame) {
+              endPlayerGame(msg.reason || 'Host Ended Game');
+            }
+          }
+        } catch(e) {}
+      }
+    });
+
 
       state.player.isSolo = false;
       showPlayerScreen('lobby');

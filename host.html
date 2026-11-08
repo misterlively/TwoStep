@@ -265,10 +265,16 @@
       currentRoomCode = (room || 'BLITZ1').toUpperCase();
       roomRef = firebaseDb.ref('rooms/' + currentRoomCode);
 
-      // Listen for players
+      // Listen for players with permission error handling
       roomRef.child('players').on('value', snapshot => {
         state.host.connectedPlayers = snapshot.val() || {};
         renderHostLeaderboard();
+      }, err => {
+        console.warn('Firebase players read error (check rules):', err);
+        const statusEl = document.getElementById('channel-indicator-text');
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="text-amber-400 font-bold">⚠️ Firebase Rules Locked (Set .read/.write to true in Console). Local Channel Active!</span>';
+        }
       });
 
       // Listen for config changes
@@ -282,6 +288,50 @@
     }
 
     if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+
+    // Cross-tab BroadcastChannel & localStorage listeners for local testing
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+        if (msg.type === 'PLAYER_JOIN' || msg.type === 'PLAYER_UPDATE') {
+          const p = msg.player || msg;
+          if (p && p.id) {
+            state.host.connectedPlayers[p.id] = p;
+            renderHostLeaderboard();
+          }
+        } else if (msg.type === 'PLAYER_LEAVE') {
+          delete state.host.connectedPlayers[msg.playerId];
+          renderHostLeaderboard();
+        }
+      };
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHANNEL_NAME && event.newValue) {
+        try {
+          const msg = JSON.parse(event.newValue);
+          if (msg.type === 'PLAYER_JOIN' || msg.type === 'PLAYER_UPDATE') {
+            const p = msg.player || msg;
+            if (p && p.id) {
+              state.host.connectedPlayers[p.id] = p;
+              renderHostLeaderboard();
+            }
+          } else if (msg.type === 'PLAYER_LEAVE') {
+            delete state.host.connectedPlayers[msg.playerId];
+            renderHostLeaderboard();
+          }
+        } catch(e) {}
+      }
+    });
+
+    // Lobby heartbeat ping every 2s
+    setInterval(() => {
+      if (state.host.gameStatus === 'LOBBY') {
+        sendNetworkMessage({ type: 'HOST_DISCOVERY_PING', time: Date.now() });
+      }
+    }, 2000);
+
 
     function sendNetworkMessage(msg) {
       if (broadcastChannel) { try { broadcastChannel.postMessage(msg); } catch(e) {} }
@@ -413,6 +463,50 @@
       currentRoomCode = hostRoomInput.value.trim().toUpperCase() || 'BLITZ1';
       hostHeaderRoomCode.textContent = currentRoomCode;
       if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+
+    // Cross-tab BroadcastChannel & localStorage listeners for local testing
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+        if (msg.type === 'PLAYER_JOIN' || msg.type === 'PLAYER_UPDATE') {
+          const p = msg.player || msg;
+          if (p && p.id) {
+            state.host.connectedPlayers[p.id] = p;
+            renderHostLeaderboard();
+          }
+        } else if (msg.type === 'PLAYER_LEAVE') {
+          delete state.host.connectedPlayers[msg.playerId];
+          renderHostLeaderboard();
+        }
+      };
+    }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHANNEL_NAME && event.newValue) {
+        try {
+          const msg = JSON.parse(event.newValue);
+          if (msg.type === 'PLAYER_JOIN' || msg.type === 'PLAYER_UPDATE') {
+            const p = msg.player || msg;
+            if (p && p.id) {
+              state.host.connectedPlayers[p.id] = p;
+              renderHostLeaderboard();
+            }
+          } else if (msg.type === 'PLAYER_LEAVE') {
+            delete state.host.connectedPlayers[msg.playerId];
+            renderHostLeaderboard();
+          }
+        } catch(e) {}
+      }
+    });
+
+    // Lobby heartbeat ping every 2s
+    setInterval(() => {
+      if (state.host.gameStatus === 'LOBBY') {
+        sendNetworkMessage({ type: 'HOST_DISCOVERY_PING', time: Date.now() });
+      }
+    }, 2000);
+
     });
 
     hostDurationBtns.forEach(btn => {
