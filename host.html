@@ -430,17 +430,6 @@
       }
     };
 
-    function ensureMockPlayersForHost() {
-      if (Object.keys(state.host.connectedPlayers).length < 3) {
-        const bots = [
-          { id: 'bot_1', name: 'SpeedySolve', avatar: '🚀', color: 'bg-cyan-600', solvedCount: 18, attemptsCount: 19, accuracy: 95, streak: 8, score: 2450, status: 'Finished' },
-          { id: 'bot_2', name: 'QuantumViper', avatar: '🐲', color: 'bg-rose-600', solvedCount: 15, attemptsCount: 16, accuracy: 94, streak: 6, score: 1980, status: 'Finished' },
-          { id: 'bot_3', name: 'NinjaCalc', avatar: '🥷', color: 'bg-emerald-600', solvedCount: 13, attemptsCount: 14, accuracy: 93, streak: 5, score: 1650, status: 'Finished' }
-        ];
-        bots.forEach(b => { if (!state.host.connectedPlayers[b.id]) state.host.connectedPlayers[b.id] = b; });
-      }
-    }
-
     // HOST CONTROLS
     const hostDurationBtns = document.querySelectorAll('.duration-btn');
     const hostCustomDuration = document.getElementById('host-custom-duration');
@@ -463,8 +452,9 @@
       currentRoomCode = hostRoomInput.value.trim().toUpperCase() || 'BLITZ1';
       hostHeaderRoomCode.textContent = currentRoomCode;
       if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
+    });
 
-    // Cross-tab BroadcastChannel & localStorage listeners for local testing
+    // Cross-tab BroadcastChannel & localStorage listeners for local testing (Runs on page load!)
     if (broadcastChannel) {
       broadcastChannel.onmessage = (event) => {
         const msg = event.data;
@@ -506,8 +496,6 @@
         sendNetworkMessage({ type: 'HOST_DISCOVERY_PING', time: Date.now() });
       }
     }, 2000);
-
-    });
 
     hostDurationBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -588,37 +576,73 @@
     }
 
     function showHostPodium() {
-      ensureMockPlayersForHost();
+      // ONLY LIVE PLAYERS - No mock bots
       const players = Object.values(state.host.connectedPlayers);
       players.sort((a, b) => (b.solvedCount - a.solvedCount) || (b.score - a.score) || (b.accuracy - a.accuracy));
 
       hostLiveRosterCard.classList.add('hidden');
       hostPodiumCard.classList.remove('hidden');
 
-      const p1 = players[0] || { name: 'Player 1', avatar: '🦊', solvedCount: 0, score: 0, color: 'bg-indigo-600' };
-      const p2 = players[1] || { name: 'Player 2', avatar: '🦉', solvedCount: 0, score: 0, color: 'bg-slate-700' };
-      const p3 = players[2] || { name: 'Player 3', avatar: '🤖', solvedCount: 0, score: 0, color: 'bg-amber-800' };
+      const elAvatar1 = document.getElementById('podium-avatar-1');
+      const elName1 = document.getElementById('podium-name-1');
+      const elScore1 = document.getElementById('podium-score-1');
 
-      document.getElementById('podium-avatar-1').textContent = p1.avatar;
-      document.getElementById('podium-avatar-1').className = `w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ${p1.color || 'bg-indigo-600'} flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-amber-500/30 border-4 border-amber-400 mb-2 animate-dance`;
-      document.getElementById('podium-name-1').textContent = p1.name;
-      document.getElementById('podium-score-1').textContent = `${p1.solvedCount} solved (${p1.score} pts)`;
+      const elAvatar2 = document.getElementById('podium-avatar-2');
+      const elName2 = document.getElementById('podium-name-2');
+      const elScore2 = document.getElementById('podium-score-2');
 
-      document.getElementById('podium-avatar-2').textContent = p2.avatar;
-      document.getElementById('podium-avatar-2').className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p2.color || 'bg-slate-700'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-slate-500/20 border-2 border-slate-400 mb-2 animate-dance-delay-1`;
-      document.getElementById('podium-name-2').textContent = p2.name;
-      document.getElementById('podium-score-2').textContent = `${p2.solvedCount} solved (${p2.score} pts)`;
+      const elAvatar3 = document.getElementById('podium-avatar-3');
+      const elName3 = document.getElementById('podium-name-3');
+      const elScore3 = document.getElementById('podium-score-3');
 
-      document.getElementById('podium-avatar-3').textContent = p3.avatar;
-      document.getElementById('podium-avatar-3').className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p3.color || 'bg-amber-800'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-700/20 border-2 border-amber-600 mb-2 animate-dance-delay-2`;
-      document.getElementById('podium-name-3').textContent = p3.name;
-      document.getElementById('podium-score-3').textContent = `${p3.solvedCount} solved (${p3.score} pts)`;
+      // 1st Place (Champion)
+      if (players.length >= 1) {
+        const p1 = players[0];
+        elAvatar1.textContent = p1.avatar || '🦊';
+        elAvatar1.className = `w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ${p1.color || 'bg-indigo-600'} flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-amber-500/30 border-4 border-amber-400 mb-2 animate-dance`;
+        elName1.textContent = p1.name;
+        elScore1.textContent = `${p1.solvedCount || 0} solved (${p1.score || 0} pts)`;
+      } else {
+        elAvatar1.textContent = '—';
+        elAvatar1.className = `w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center text-3xl text-slate-600 mb-2`;
+        elName1.textContent = 'No Player';
+        elScore1.textContent = '0 solved';
+      }
 
+      // 2nd Place (Silver)
+      if (players.length >= 2) {
+        const p2 = players[1];
+        elAvatar2.textContent = p2.avatar || '🦉';
+        elAvatar2.className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p2.color || 'bg-slate-700'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-slate-500/20 border-2 border-slate-400 mb-2 animate-dance-delay-1`;
+        elName2.textContent = p2.name;
+        elScore2.textContent = `${p2.solvedCount || 0} solved (${p2.score || 0} pts)`;
+      } else {
+        elAvatar2.textContent = '—';
+        elAvatar2.className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl text-slate-600 mb-2`;
+        elName2.textContent = 'Uncontested';
+        elScore2.textContent = '—';
+      }
+
+      // 3rd Place (Bronze)
+      if (players.length >= 3) {
+        const p3 = players[2];
+        elAvatar3.textContent = p3.avatar || '🤖';
+        elAvatar3.className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${p3.color || 'bg-amber-800'} flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-700/20 border-2 border-amber-600 mb-2 animate-dance-delay-2`;
+        elName3.textContent = p3.name;
+        elScore3.textContent = `${p3.solvedCount || 0} solved (${p3.score || 0} pts)`;
+      } else {
+        elAvatar3.textContent = '—';
+        elAvatar3.className = `w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-800 border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl text-slate-600 mb-2`;
+        elName3.textContent = 'Uncontested';
+        elScore3.textContent = '—';
+      }
+
+      // Ranks 4 through 10 (Live players only)
       const topTenList = document.getElementById('top-ten-list');
       topTenList.innerHTML = '';
       const rest = players.slice(3, 10);
       if (rest.length === 0) {
-        topTenList.innerHTML = '<div class="text-xs text-slate-500 py-2">No other players in this match.</div>';
+        topTenList.innerHTML = '<div class="text-xs text-slate-500 py-2">No other live players in this match.</div>';
       } else {
         rest.forEach((p, idx) => {
           const row = document.createElement('div');
@@ -626,13 +650,13 @@
           row.innerHTML = `
             <div class="flex items-center gap-2">
               <span class="font-bold text-slate-500 w-5">#${idx + 4}</span>
-              <span class="w-6 h-6 rounded-lg ${p.color || 'bg-slate-800'} flex items-center justify-center text-xs">${p.avatar}</span>
+              <span class="w-6 h-6 rounded-lg ${p.color || 'bg-slate-800'} flex items-center justify-center text-xs">${p.avatar || '🦊'}</span>
               <span class="font-semibold text-slate-200">${p.name}</span>
             </div>
             <div class="flex items-center gap-4 font-mono-math">
-              <span class="text-indigo-300 font-bold">${p.solvedCount} solved</span>
+              <span class="text-indigo-300 font-bold">${p.solvedCount || 0} solved</span>
               <span class="text-slate-400">${p.accuracy || 100}% acc</span>
-              <span class="text-cyan-400 font-bold">${p.score} pts</span>
+              <span class="text-cyan-400 font-bold">${p.score || 0} pts</span>
             </div>
           `;
           topTenList.appendChild(row);
