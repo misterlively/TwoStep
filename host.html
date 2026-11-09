@@ -25,37 +25,12 @@
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
-
-  <!-- HOST HEADER -->
-  <header class="bg-slate-900/90 border-b border-slate-800 backdrop-blur sticky top-0 z-50 px-4 py-3">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-500 to-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-xl">
-          👑
-        </div>
-        <div>
-          <h1 class="text-lg font-bold leading-tight flex items-center gap-2">
-            <span>Algebra Blitz</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold">Teacher / Host Mission Control</span>
-          </h1>
-          <p class="text-xs text-slate-400 flex items-center gap-1.5" id="host-network-status">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span id="channel-indicator-text">⚡ Firebase Online (Live Across Devices)</span>
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <div class="px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center gap-2">
-          <span class="text-slate-500 font-bold uppercase text-[10px]">Room Code:</span>
-          <span id="host-header-room-code" class="font-mono font-bold text-cyan-300 tracking-wider">BLITZ1</span>
-        </div>
-        <button id="audio-toggle-btn" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition-colors" title="Toggle Sound">
-          <span id="audio-icon" class="text-sm">🔊</span>
-        </button>
-      </div>
-    </div>
-  </header>
+  <!-- Minimal floating audio toggle in corner -->
+  <div class="fixed top-3 right-3 z-50">
+    <button id="audio-toggle-btn" class="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs transition-colors" title="Toggle Sound">
+      <span id="audio-icon">🔊</span>
+    </button>
+  </div>
 
   <!-- MAIN HOST CONTENT -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-6">
@@ -74,13 +49,9 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <div class="px-3 py-1.5 rounded-2xl bg-slate-950 border border-slate-800 text-left">
-              <div class="text-[9px] uppercase font-bold text-slate-500">Room Code</div>
-              <input type="text" id="host-room-input" value="BLITZ1" maxlength="10" class="w-24 bg-transparent font-mono font-black text-cyan-300 text-sm uppercase focus:outline-none">
-            </div>
             <div class="px-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-right">
               <div class="text-[10px] uppercase font-bold text-slate-500">Host Timer</div>
-              <div id="host-timer-display" class="text-2xl font-black font-mono-math text-amber-300">02:00</div>
+              <div id="host-timer-display" class="text-2xl font-black font-mono-math text-amber-300">07:00</div>
             </div>
             <div id="host-status-badge" class="px-3.5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold text-xs">
               LOBBY OPEN
@@ -88,39 +59,24 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 items-end">
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Match Duration</label>
-            <div class="grid grid-cols-3 gap-2 mb-2">
-              <button class="duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200" data-seconds="60">1 Min</button>
-              <button class="duration-btn py-2 px-3 rounded-xl bg-indigo-600 border border-indigo-500 text-xs font-bold text-white shadow" data-seconds="120">2 Min</button>
-              <button class="duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200" data-seconds="180">3 Min</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-400">Custom Secs:</span>
-              <input type="number" id="host-custom-duration" min="10" max="1800" value="120" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white text-center font-mono focus:border-indigo-500">
-              <button id="host-apply-duration-btn" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium">Set</button>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">100 Synchronized Equations</label>
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between mb-2">
-              <div>
-                <div class="text-[10px] text-slate-500">Match Seed ID</div>
-                <div id="host-seed-display" class="font-mono text-sm font-bold text-cyan-300">#49218</div>
+            <div class="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-3.5 w-fit">
+              <div class="flex items-center gap-2">
+                <input type="number" id="host-minutes-input" min="0" max="60" value="7" class="w-16 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-center font-mono font-black text-xl text-white focus:outline-none focus:border-indigo-500">
+                <span class="text-xs font-bold text-slate-400 uppercase">min</span>
               </div>
-              <button id="host-reroll-seed-btn" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs text-slate-300 hover:text-white flex items-center gap-1">
-                <span>🎲</span> New 100
-              </button>
-            </div>
-            <div class="text-[11px] text-slate-500 italic">
-              All students receive the identical 100 equations in identical order.
+              <span class="text-slate-600 font-bold text-xl">:</span>
+              <div class="flex items-center gap-2">
+                <input type="number" id="host-seconds-input" min="0" max="59" value="0" step="5" class="w-16 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-center font-mono font-black text-xl text-white focus:outline-none focus:border-indigo-500">
+                <span class="text-xs font-bold text-slate-400 uppercase">sec</span>
+              </div>
             </div>
           </div>
 
-          <div class="flex flex-col justify-end gap-2">
-            <button id="host-start-game-btn" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-sm">
+          <div class="flex flex-col gap-2.5">
+            <button id="host-start-game-btn" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-sm">
               <span>🚀</span> Start Game for All Players
             </button>
             <button id="host-end-game-btn" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-2 text-sm opacity-50 cursor-not-allowed" disabled>
@@ -242,7 +198,7 @@
       measurementId: "G-74T8LYCD7F"
     };
 
-    let currentRoomCode = 'BLITZ1';
+    let currentRoomCode = 'GAME';
     let firebaseDb = null;
     let roomRef = null;
     let isFirebaseOnline = false;
@@ -271,10 +227,9 @@
         renderHostLeaderboard();
       }, err => {
         console.warn('Firebase players read error (check rules):', err);
-        const statusEl = document.getElementById('channel-indicator-text');
-        if (statusEl) {
-          statusEl.innerHTML = '<span class="text-amber-400 font-bold">⚠️ Firebase Rules Locked (Set .read/.write to true in Console). Local Channel Active!</span>';
-        }
+        console.warn('Firebase players read error (check rules):', err);
+        const b = document.getElementById('host-status-badge');
+        if (b) { b.textContent = 'RULES LOCKED'; b.className = 'px-3.5 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-xs'; }
       });
 
       // Listen for config changes
@@ -299,6 +254,14 @@
           if (p && p.id) {
             state.host.connectedPlayers[p.id] = p;
             renderHostLeaderboard();
+            // If match is active, let late player know so they can jump in!
+            if (state.host.gameStatus === 'PLAYING') {
+              sendNetworkMessage({
+                type: 'GAME_IN_PROGRESS',
+                seed: state.host.seed,
+                duration: state.host.remainingSeconds
+              });
+            }
           }
         } else if (msg.type === 'PLAYER_LEAVE') {
           delete state.host.connectedPlayers[msg.playerId];
@@ -340,10 +303,10 @@
       if (isFirebaseOnline && roomRef) {
         if (msg.type === 'START_GAME') {
           roomRef.child('config').update({
-            status: 'COUNTDOWN',
+            status: 'PLAYING',
             seed: msg.seed,
             duration: msg.duration,
-            startTime: firebase.database.ServerValue.TIMESTAMP
+            startTime: Date.now()
           });
         } else if (msg.type === 'END_GAME') {
           roomRef.child('config').update({
@@ -420,22 +383,19 @@
     // STATE
     const state = {
       host: {
-        gameDuration: 120,
+        gameDuration: 420,
         seed: 49218,
         gameStatus: 'LOBBY',
         problems: generate100Equations(49218),
         connectedPlayers: {},
         timerInterval: null,
-        remainingSeconds: 120
+        remainingSeconds: 420
       }
     };
 
     // HOST CONTROLS
-    const hostDurationBtns = document.querySelectorAll('.duration-btn');
-    const hostCustomDuration = document.getElementById('host-custom-duration');
-    const hostApplyDurationBtn = document.getElementById('host-apply-duration-btn');
-    const hostSeedDisplay = document.getElementById('host-seed-display');
-    const hostRerollSeedBtn = document.getElementById('host-reroll-seed-btn');
+    const hostMinutesInput = document.getElementById('host-minutes-input');
+    const hostSecondsInput = document.getElementById('host-seconds-input');
     const hostStartGameBtn = document.getElementById('host-start-game-btn');
     const hostEndGameBtn = document.getElementById('host-end-game-btn');
     const hostTimerDisplay = document.getElementById('host-timer-display');
@@ -445,14 +405,10 @@
     const hostPodiumCard = document.getElementById('host-podium-card');
     const hostLiveRosterCard = document.getElementById('host-live-roster-card');
     const podiumNewGameBtn = document.getElementById('podium-new-game-btn');
-    const hostRoomInput = document.getElementById('host-room-input');
-    const hostHeaderRoomCode = document.getElementById('host-header-room-code');
+    // hostRoomInput removed
+    // hostHeaderRoomCode removed
 
-    hostRoomInput.addEventListener('input', () => {
-      currentRoomCode = hostRoomInput.value.trim().toUpperCase() || 'BLITZ1';
-      hostHeaderRoomCode.textContent = currentRoomCode;
-      if (isFirebaseOnline) setupFirebaseListeners(currentRoomCode);
-    });
+    
 
     // Cross-tab BroadcastChannel & localStorage listeners for local testing (Runs on page load!)
     if (broadcastChannel) {
@@ -464,6 +420,14 @@
           if (p && p.id) {
             state.host.connectedPlayers[p.id] = p;
             renderHostLeaderboard();
+            // If match is active, let late player know so they can jump in!
+            if (state.host.gameStatus === 'PLAYING') {
+              sendNetworkMessage({
+                type: 'GAME_IN_PROGRESS',
+                seed: state.host.seed,
+                duration: state.host.remainingSeconds
+              });
+            }
           }
         } else if (msg.type === 'PLAYER_LEAVE') {
           delete state.host.connectedPlayers[msg.playerId];
@@ -497,24 +461,17 @@
       }
     }, 2000);
 
-    hostDurationBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        hostDurationBtns.forEach(b => b.className = "duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200");
-        btn.className = "duration-btn py-2 px-3 rounded-xl bg-indigo-600 border border-indigo-500 text-xs font-bold text-white shadow";
-        const secs = parseInt(btn.getAttribute('data-seconds'), 10);
-        state.host.gameDuration = secs; state.host.remainingSeconds = secs;
-        updateHostTimerUI();
-      });
-    });
+    function updateDurationFromInputs() {
+      const m = parseInt(hostMinutesInput.value, 10) || 0;
+      const s = parseInt(hostSecondsInput.value, 10) || 0;
+      const totalSecs = Math.max(10, m * 60 + s);
+      state.host.gameDuration = totalSecs;
+      state.host.remainingSeconds = totalSecs;
+      updateHostTimerUI();
+    }
 
-    hostApplyDurationBtn.addEventListener('click', () => {
-      const secs = parseInt(hostCustomDuration.value, 10);
-      if (secs && secs >= 10 && secs <= 1800) {
-        state.host.gameDuration = secs; state.host.remainingSeconds = secs;
-        updateHostTimerUI();
-        hostDurationBtns.forEach(b => b.className = "duration-btn py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200");
-      }
-    });
+    if (hostMinutesInput) hostMinutesInput.addEventListener('input', updateDurationFromInputs);
+    if (hostSecondsInput) hostSecondsInput.addEventListener('input', updateDurationFromInputs);
 
     function updateHostTimerUI() {
       const mins = Math.floor(state.host.remainingSeconds / 60);
@@ -522,16 +479,13 @@
       hostTimerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    hostRerollSeedBtn.addEventListener('click', () => {
-      const newSeed = Math.floor(Math.random() * 89999) + 10000;
-      state.host.seed = newSeed;
-      state.host.problems = generate100Equations(newSeed);
-      hostSeedDisplay.textContent = `#${newSeed}`;
-      playBeep(580, 'sine', 0.08);
-    });
-
     hostStartGameBtn.addEventListener('click', () => {
       if (state.host.gameStatus === 'PLAYING') return;
+
+      // Automatically generate a fresh random seed for every new match!
+      const freshSeed = Math.floor(Math.random() * 89999) + 10000;
+      state.host.seed = freshSeed;
+      state.host.problems = generate100Equations(freshSeed);
       hostPodiumCard.classList.add('hidden');
       hostLiveRosterCard.classList.remove('hidden');
       state.host.gameStatus = 'PLAYING';
@@ -670,6 +624,7 @@
       state.host.gameStatus = 'LOBBY';
       hostStatusBadge.textContent = 'LOBBY OPEN';
       hostStatusBadge.className = 'px-3.5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold text-xs';
+      updateDurationFromInputs();
     });
 
     function renderHostLeaderboard() {
